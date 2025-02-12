@@ -80,8 +80,8 @@ void printModule(HloModule* module) {
 bool errorPredicate(HloModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
-            if (module->nodeMap.find(node->operandNames[0]) != module->nodeMap.end() &&
-                module->nodeMap.find(node->operandNames[1]) != module->nodeMap.end())
+            if (module->nodeMap.contains(node->operandNames[0]) &&
+                module->nodeMap.contains(node->operandNames[1]))
                 return true;
         }
     }
