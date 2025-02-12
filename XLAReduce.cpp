@@ -1,0 +1,147 @@
+﻿#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <map>
+
+#include "kaizen.h"
+
+// HLO Node representing a single operation.
+struct HloNode {
+    std::string name;
+    std::string op;                        // Operation type: "Constant" or "Add"
+    std::vector<std::string> operandNames; // For "Add", stores operand names.
+    int value;                             // Used if op == "Constant"
+};
+
+// HLO Module containing a list of nodes and a lookup table.
+struct HloModule {
+    std::vector<HloNode*> nodes;
+    std::map<std::string, HloNode*> nodeMap;
+};
+
+// Function to parse a minimal HLO module from an input file.
+// The expected syntax for each line is:
+//   Constant <name> = <value>
+//   Add <name> = <operand1> + <operand2>
+HloModule* parseModule(const std::string& filename) {
+    std::ifstream infile(filename);
+    if (!infile) {
+        std::cerr << "Error opening file " << filename << "\n";
+        return nullptr;
+    }
+    HloModule* module = new HloModule();
+    std::string line;
+    while (std::getline(infile, line)) {
+        if (line.empty()) continue;
+        std::istringstream iss(line);
+        std::string op;
+        iss >> op;  // Read the operation type.
+        HloNode* node = new HloNode();
+        node->op = op;
+        iss >> node->name;  // Read the node name.
+        // Skip the '=' token.
+        std::string eq;
+        iss >> eq;
+        if (op == "Constant") {
+            int val;
+            iss >> val;
+            node->value = val;
+        }
+        else if (op == "Add") {
+            std::string operand1, plus, operand2;
+            iss >> operand1 >> plus >> operand2;
+            node->operandNames.push_back(operand1);
+            node->operandNames.push_back(operand2);
+        }
+        module->nodes.push_back(node);
+        module->nodeMap[node->name] = node;
+    }
+    return module;
+}
+
+// Utility function to print the HLO module.
+void printModule(HloModule* module) {
+    for (auto node : module->nodes) {
+        if (node->op == "Constant") {
+            std::cout << "Constant " << node->name << " = " << node->value << "\n";
+        }
+        else if (node->op == "Add") {
+            std::cout << "Add " << node->name << " = "
+                << node->operandNames[0] << " + " << node->operandNames[1] << "\n";
+        }
+    }
+}
+
+// Error predicate: In this minimal example, the property is preserved if the module contains at least one "Add" node
+// whose operands are defined.
+bool errorPredicate(HloModule* module) {
+    for (auto node : module->nodes) {
+        if (node->op == "Add") {
+            if (module->nodeMap.contains(node->operandNames[0]) != module->nodeMap.end() &&
+                module->nodeMap.contains(node->operandNames[1]) != module->nodeMap.end())
+                return true;
+        }
+    }
+    return false;
+}
+
+// Reduction function: attempts to remove a node (non-critical node, such as a "Constant") and checks whether the property holds.
+// Returns true if a reduction was applied.
+bool reduceModule(HloModule* module) {
+    // Try removing non-"Add" nodes first to preserve the property.
+    for (size_t i = 0; i < module->nodes.size(); ++i) {
+        HloNode* node = module->nodes[i];
+        if (node->op != "Add") {
+            // Temporarily remove the node.
+            module->nodes.erase(module->nodes.begin() + i);
+            module->nodeMap.erase(node->name);
+
+            // Check if the property is still preserved.
+            if (errorPredicate(module)) {
+                std::cout << "Reduction applied: Removed node " << node->name << "\n";
+                delete node;
+                return true;
+            }
+            else {
+                // Revert removal if property is lost.
+                module->nodes.insert(module->nodes.begin() + i, node);
+                module->nodeMap[node->name] = node;
+            }
+        }
+    }
+    return false;  // No valid reduction could be applied.
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: reducer <input_file>\n";
+        return 1;
+    }
+
+    // Parse the input HLO module.
+    HloModule* module = parseModule(argv[1]);
+    if (!module) return 1;
+
+    std::cout << "Original Module:\n";
+    printModule(module);
+
+    // Iterative reduction: apply reductions until no further change is possible.
+    int reductionCount = 0;
+    while (reduceModule(module)) {
+        reductionCount++;
+        std::cout << "\nAfter " << reductionCount << " reduction(s):\n";
+        printModule(module);
+    }
+
+    std::cout << "\nFinal Reduced Module:\n";
+    printModule(module);
+
+    // Cleanup: deallocate memory.
+    for (auto node : module->nodes) {
+        delete node;
+    }
+    delete module;
+}
