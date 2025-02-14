@@ -1,4 +1,4 @@
-﻿# CMakeList.txt : CMake project for XLAReduce, include source and define
+﻿# CMakeList.txt : CMake project for IRReduce, include source and define
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.8)
@@ -9,13 +9,13 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("XLAReduce")
+project ("IRReduce")
 
 # Add source to this project's executable.
-add_executable (XLAReduce "XLAReduce.cpp" "XLAReduce.h" "kaizen.h")
+add_executable (IRReduce "IRReduce.cpp" "IRReduce.h" "kaizen.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET XLAReduce PROPERTY CXX_STANDARD 20)
+  set_property(TARGET IRReduce PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.
