@@ -91,7 +91,7 @@ bool predicateHolds(IrModule* module) {
 // Returns true if a reduction was applied.
 bool reduceModule(IrModule* module) {
     // Try removing non-"Add" nodes first to preserve the property.
-    for (size_t i = 0; i < module->nodes.size(); ++i) {
+    for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
         if (node->op != "Add") {
             // Temporarily remove the node.
