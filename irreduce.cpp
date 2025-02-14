@@ -49,8 +49,7 @@ HloModule* parseModule(const std::string& filename) {
             int val;
             iss >> val;
             node->value = val;
-        }
-        else if (op == "Add") {
+        } else if (op == "Add") {
             std::string operand1, plus, operand2;
             iss >> operand1 >> plus >> operand2;
             node->operandNames.push_back(operand1);
@@ -67,8 +66,7 @@ void printModule(HloModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
             zen::log("Constant ", node->name, " = ", node->value);
-        }
-        else if (node->op == "Add") {
+        } else if (node->op == "Add") {
             zen::log("Add ", node->name, " = ", node->operandNames[0], " + ", node->operandNames[1]);
         }
     }
