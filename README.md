@@ -1,1 +1,1 @@
-# XLAReduce
+# IRReduce
