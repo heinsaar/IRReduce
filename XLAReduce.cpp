@@ -29,7 +29,7 @@ struct HloModule {
 HloModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
-        std::cerr << "Error opening file " << filename << "\n";
+        zen::log("Error opening file ", filename);
         return nullptr;
     }
     HloModule* module = new HloModule();
@@ -66,11 +66,10 @@ HloModule* parseModule(const std::string& filename) {
 void printModule(HloModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
-            std::cout << "Constant " << node->name << " = " << node->value << "\n";
+            zen::log("Constant ", node->name, " = ", node->value);
         }
         else if (node->op == "Add") {
-            std::cout << "Add " << node->name << " = "
-                << node->operandNames[0] << " + " << node->operandNames[1] << "\n";
+            zen::log("Add ", node->name, " = ", node->operandNames[0], " + ", node->operandNames[1]);
         }
     }
 }
@@ -101,7 +100,7 @@ bool reduceModule(HloModule* module) {
 
             // Check if the property is still preserved.
             if (errorPredicate(module)) {
-                std::cout << "Reduction applied: Removed node " << node->name << "\n";
+                zen::log("Reduction applied: Removed node ", node->name);
                 delete node;
                 return true;
             }
@@ -117,7 +116,7 @@ bool reduceModule(HloModule* module) {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: reducer <input_file>\n";
+        zen::log("Usage: reducer <input_file>");
         return 1;
     }
 
@@ -125,18 +124,18 @@ int main(int argc, char* argv[]) {
     HloModule* module = parseModule(argv[1]);
     if (!module) return 1;
 
-    std::cout << "Original Module:\n";
+    zen::log("Original Module:\n");
     printModule(module);
 
     // Iterative reduction: apply reductions until no further change is possible.
     int reductionCount = 0;
     while (reduceModule(module)) {
         reductionCount++;
-        std::cout << "\nAfter " << reductionCount << " reduction(s):\n";
+        zen::log("\nAfter ", reductionCount, " reduction(s):\n");
         printModule(module);
     }
 
-    std::cout << "\nFinal Reduced Module:\n";
+    zen::log("Final Reduced Module:");
     printModule(module);
 
     // Cleanup: deallocate memory.
