@@ -29,7 +29,7 @@ struct IrModule {
 IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
-        zen::log("Error opening file ", filename);
+        zen::log("Error opening file ", zen::quote(filename));
         return nullptr;
     }
     IrModule* module = new IrModule();
@@ -55,7 +55,7 @@ IrModule* parseModule(const std::string& filename) {
             node->operandNames.push_back(operand1);
             node->operandNames.push_back(operand2);
         } else {
-            zen::log("Unknown operation type: ", op);
+            zen::log("Unknown operation type: ", zen::quote(op));
         }
         module->nodes.push_back(node);
         module->nodeMap[node->name] = node;
@@ -100,7 +100,7 @@ bool reduceModule(IrModule* module) {
 
             // Check if the property is still preserved.
             if (errorPredicate(module)) {
-                zen::log("Reduction applied: Removed node ", node->name);
+                zen::log("Reduction applied: Removed node ", zen::quote(node->name));
                 delete node;
                 return true;
             }
