@@ -8,38 +8,38 @@
 
 #include "kaizen.h"
 
-// HLO Node representing a single operation.
-struct HloNode {
+// IR Node representing a single operation.
+struct IrNode {
     std::string name;
     std::string op;                        // Operation type: "Constant" or "Add"
     std::vector<std::string> operandNames; // For "Add", stores operand names.
     int value;                             // Used if op == "Constant"
 };
 
-// HLO Module containing a list of nodes and a lookup table.
-struct HloModule {
-    std::vector<HloNode*> nodes;
-    std::map<std::string, HloNode*> nodeMap;
+// IR Module containing a list of nodes and a lookup table.
+struct IrModule {
+    std::vector<IrNode*> nodes;
+    std::map<std::string, IrNode*> nodeMap;
 };
 
-// Function to parse a minimal HLO module from an input file.
+// Function to parse a minimal IR module from an input file.
 // The expected syntax for each line is:
 //   Constant <name> = <value>
 //   Add <name> = <operand1> + <operand2>
-HloModule* parseModule(const std::string& filename) {
+IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
         zen::log("Error opening file ", filename);
         return nullptr;
     }
-    HloModule* module = new HloModule();
+    IrModule* module = new IrModule();
     std::string line;
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
         std::istringstream iss(line);
         std::string op;
         iss >> op;  // Read the operation type.
-        HloNode* node = new HloNode();
+        IrNode* node = new IrNode();
         node->op = op;
         iss >> node->name;  // Read the node name.
         // Skip the '=' token.
@@ -63,8 +63,8 @@ HloModule* parseModule(const std::string& filename) {
     return module;
 }
 
-// Utility function to print the HLO module.
-void printModule(HloModule* module) {
+// Utility function to print the IR module.
+void printModule(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
             zen::log("Constant ", node->name, " = ", node->value);
@@ -76,7 +76,7 @@ void printModule(HloModule* module) {
 
 // Error predicate: In this minimal example, the property is preserved if the module contains at least one "Add" node
 // whose operands are defined.
-bool errorPredicate(HloModule* module) {
+bool errorPredicate(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
             if (module->nodeMap.contains(node->operandNames[0]) &&
@@ -89,10 +89,10 @@ bool errorPredicate(HloModule* module) {
 
 // Reduction function: attempts to remove a node (non-critical node, such as a "Constant") and checks whether the property holds.
 // Returns true if a reduction was applied.
-bool reduceModule(HloModule* module) {
+bool reduceModule(IrModule* module) {
     // Try removing non-"Add" nodes first to preserve the property.
     for (size_t i = 0; i < module->nodes.size(); ++i) {
-        HloNode* node = module->nodes[i];
+        IrNode* node = module->nodes[i];
         if (node->op != "Add") {
             // Temporarily remove the node.
             module->nodes.erase(module->nodes.begin() + i);
@@ -120,8 +120,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Parse the input HLO module.
-    HloModule* module = parseModule(argv[1]);
+    // Parse the input IR module.
+    IrModule* module = parseModule(argv[1]);
     if (!module) return 1;
 
     zen::log("Original Module:\n");
