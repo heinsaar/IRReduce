@@ -54,6 +54,8 @@ HloModule* parseModule(const std::string& filename) {
             iss >> operand1 >> plus >> operand2;
             node->operandNames.push_back(operand1);
             node->operandNames.push_back(operand2);
+        } else {
+            zen::log("Unknown operation type: ", op);
         }
         module->nodes.push_back(node);
         module->nodeMap[node->name] = node;

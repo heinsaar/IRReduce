@@ -3,7 +3,6 @@ HloModule MatMulExample
 ENTRY MatMul {
   lhs = f32[2, 3] parameter(0)
   rhs = f32[3, 4] parameter(1)
-  dot = f32[2, 4] dot(lhs, rhs),
-      lhs_contracting_dims={1}, rhs_contracting_dims={0}
+  dot = f32[2, 4] dot(lhs, rhs), lhs_contracting_dims={1}, rhs_contracting_dims={0}
   ROOT result = f32[2, 4] copy(dot)
 }
