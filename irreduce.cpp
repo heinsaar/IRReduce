@@ -67,9 +67,9 @@ IrModule* parseModule(const std::string& filename) {
 void printModule(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
-            zen::log("Constant ", node->name, " = ", node->value);
+            zen::log("Constant", node->name, "=", node->value);
         } else if (node->op == "Add") {
-            zen::log("Add ", node->name, " = ", node->operandNames[0], " + ", node->operandNames[1]);
+            zen::log("Add", node->name, "=", node->operandNames[0], "+", node->operandNames[1]);
         }
     }
 }
