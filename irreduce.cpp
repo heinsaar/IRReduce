@@ -115,13 +115,14 @@ bool reduceModule(IrModule* module) {
 }
 
 int main(int argc, char* argv[]) {
+    zen::cmd_args args(argv, argc);
     if (argc < 2) {
         zen::log("Usage: reducer <input_file>");
         return 1;
     }
 
     // Parse the input IR module.
-    IrModule* module = parseModule(argv[1]);
+    IrModule* module = parseModule(args.arg_at(1));
     if (!module) return 1;
 
     zen::log("Original Module:\n");
