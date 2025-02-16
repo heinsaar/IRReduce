@@ -76,7 +76,7 @@ void printModule(IrModule* module) {
 
 // Error predicate: In this minimal example, the property is preserved if the module contains at least one "Add" node
 // whose operands are defined.
-bool predicateHolds(IrModule* module) {
+bool checkPrimaryPredicate(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
             if (module->nodeMap.contains(node->operandNames[0]) &&
@@ -99,7 +99,7 @@ bool reduceModule(IrModule* module) {
             module->nodeMap.erase(node->name);
 
             // Check if the property is still preserved.
-            if (predicateHolds(module)) {
+            if (checkPrimaryPredicate(module)) {
                 zen::log("Reduction applied: Removed node ", zen::quote(node->name));
                 delete node;
                 return true;
