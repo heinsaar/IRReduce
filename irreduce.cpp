@@ -134,11 +134,11 @@ int main(int argc, char* argv[]) {
     int reductionCount = 0;
     while (reduceModule(module)) {
         reductionCount++;
-        zen::log("\nAfter ", reductionCount, " reduction(s):\n");
-        printModule(module);
+        // zen::log("\nAfter ", reductionCount, " reduction(s):\n");
+        // printModule(module);
     }
 
-    zen::log("Final Reduced Module:");
+    zen::log("Final module after ", reductionCount, " reductions:");
     printModule(module);
 
     // Cleanup: deallocate memory.
