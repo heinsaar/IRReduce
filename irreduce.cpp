@@ -98,11 +98,11 @@ bool reduceModule(IrModule* module) {
             // Temporarily remove the node.
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
-            zen::log("\nReduction applied: removed node ", zen::quote(node->name));
+            zen::print("Reduction applied: ");
 
             // Check if the property is still preserved.
             if (checkPrimaryPredicate(module)) {
-                zen::log("Predicate holds after previous reduction.");
+                zen::log("predicate holds after removing node", zen::quote(node->name));
                 delete node;
                 return true;
             }
