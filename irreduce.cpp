@@ -102,7 +102,7 @@ bool reduceModule(IrModule* module) {
 
             // Check if the property is still preserved.
             if (checkPrimaryPredicate(module)) {
-                zen::log("predicate holds after removing node", zen::quote(node->name));
+                zen::log(zen::color::green("predicate holds"), "after removing node", zen::quote(node->name));
                 delete node;
                 return true;
             }
