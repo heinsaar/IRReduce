@@ -98,7 +98,7 @@ bool reduceModule(IrModule* module) {
             // Temporarily remove the node.
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
-            zen::print("Reduction applied: ");
+            zen::print("Reduction applied, ");
 
             // Check if the property is still preserved.
             if (checkPrimaryPredicate(module)) {
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     IrModule* module = parseModule(args.arg_at(1));
     if (!module) return 1;
 
-    zen::log("Original Module:\n");
+    zen::log("Original Module:");
     printModule(module);
 
     // Iterative reduction: apply reductions until no further change is possible.
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
         // printModule(module);
     }
 
-    zen::log("Final module after ", reductionCount, " reductions:");
+    zen::log("final module after", reductionCount, "reductions:");
     printModule(module);
 
     // Cleanup: deallocate memory.
