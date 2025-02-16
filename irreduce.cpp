@@ -22,6 +22,18 @@ struct IrModule {
     std::map<std::string, IrNode*> nodeMap;
 };
 
+// Utility function to print the IR module.
+void printModule(IrModule* module) {
+    for (auto node : module->nodes) {
+        if (node->op == "Constant") {
+            zen::log("Constant", node->name, "=", node->value);
+        }
+        else if (node->op == "Add") {
+            zen::log("Add", node->name, "=", node->operandNames[0], "+", node->operandNames[1]);
+        }
+    }
+}
+
 // Function to parse a minimal IR module from an input file.
 // The expected syntax for each line is:
 //   Constant <name> = <value>
@@ -61,17 +73,6 @@ IrModule* parseModule(const std::string& filename) {
         module->nodeMap[node->name] = node;
     }
     return module;
-}
-
-// Utility function to print the IR module.
-void printModule(IrModule* module) {
-    for (auto node : module->nodes) {
-        if (node->op == "Constant") {
-            zen::log("Constant", node->name, "=", node->value);
-        } else if (node->op == "Add") {
-            zen::log("Add", node->name, "=", node->operandNames[0], "+", node->operandNames[1]);
-        }
-    }
 }
 
 // Error predicate: In this minimal example, the property is preserved if the module contains at least one "Add" node
