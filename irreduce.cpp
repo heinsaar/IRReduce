@@ -118,7 +118,7 @@ bool reduceModule(IrModule* module) {
 int main(int argc, char* argv[]) {
     zen::cmd_args args(argv, argc);
     if (argc < 2) {
-        zen::log("Usage: reducer <input_file>");
+        zen::log("Usage: irreduce <input_file>");
         return 1;
     }
 
