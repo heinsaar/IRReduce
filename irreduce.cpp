@@ -12,7 +12,7 @@
 struct IrNode {
     std::string name;
     std::string op;                        // Operation type: "Constant" or "Add"
-    std::vector<std::string> operandNames; // For "Add", stores operand names.
+    std::vector<std::string> operandNames; // For "Add", stores operand names
     int value;                             // Used if op == "Constant"
 };
 
@@ -36,8 +36,8 @@ void printModule(IrModule* module) {
 
 // Function to parse a minimal IR module from an input file.
 // The expected syntax for each line is:
-//   Constant <name> = <value>
-//   Add <name> = <operand1> + <operand2>
+// Constant <name> = <value>
+// Add <name> = <operand1> + <operand2>
 IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
@@ -50,10 +50,10 @@ IrModule* parseModule(const std::string& filename) {
         if (line.empty()) continue;
         std::istringstream iss(line);
         std::string op;
-        iss >> op;  // Read the operation type.
+        iss >> op;         // read the operation type
         IrNode* node = new IrNode();
         node->op = op;
-        iss >> node->name;  // Read the node name.
+        iss >> node->name; // read the node name
         // Skip the '=' token.
         std::string eq;
         iss >> eq;
@@ -113,7 +113,7 @@ bool reduceModule(IrModule* module) {
             }
         }
     }
-    return false;  // No valid reduction could be applied.
+    return false; // No valid reduction could be applied.
 }
 
 int main(int argc, char* argv[]) {
