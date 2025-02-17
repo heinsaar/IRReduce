@@ -22,16 +22,17 @@ struct IrModule {
     std::map<std::string, IrNode*> nodeMap;
 };
 
-// Utility function to print the IR module.
-void printModule(IrModule* module) {
+std::string to_string(IrModule* module) {
+    std::stringstream result;
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
-            zen::log("Constant", node->name, "=", node->value);
+            result << "Constant " << node->name << " = " << node->value << '\n';
         }
         else if (node->op == "Add") {
-            zen::log("Add", node->name, "=", node->operandNames[0], "+", node->operandNames[1]);
+            result << "Add " << node->name << " = " << node->operandNames[0] << " + " << node->operandNames[1] << '\n';
         }
     }
+    return result.str();
 }
 
 // Function to parse a minimal IR module from an input file.
@@ -129,7 +130,7 @@ int main(int argc, char* argv[]) {
     if (!module) return 1;
 
     zen::log("Original Module:");
-    printModule(module);
+    zen::log(module);
 
     // Iterative reduction: apply reductions until no further change is possible.
     int reductionCount = 0;
@@ -140,7 +141,7 @@ int main(int argc, char* argv[]) {
     }
 
     zen::log("final module after", reductionCount, "reductions:");
-    printModule(module);
+    zen::log(module);
 
     // Cleanup: deallocate memory.
     for (auto node : module->nodes) {
