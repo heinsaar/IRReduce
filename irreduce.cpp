@@ -42,7 +42,7 @@ std::string to_string(IrModule* module) {
 IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
-        zen::log("Error opening file ", zen::quote(filename));
+        zen::log("Error opening file", zen::quote(filename));
         return nullptr;
     }
     IrModule* module = new IrModule();
