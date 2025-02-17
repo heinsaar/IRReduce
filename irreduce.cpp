@@ -129,8 +129,7 @@ int main(int argc, char* argv[]) {
     IrModule* module = parseModule(args.arg_at(1));
     if (!module) return 1;
 
-    zen::log("Original Module:");
-    zen::log(module);
+    zen::log("Original Module:\n", module);
 
     // Iterative reduction: apply reductions until no further change is possible.
     int reductionCount = 0;
@@ -140,8 +139,7 @@ int main(int argc, char* argv[]) {
         // printModule(module);
     }
 
-    zen::log("final module after", reductionCount, "reductions:");
-    zen::log(module);
+    zen::log("final module after", reductionCount, "reductions:\n", module);
 
     // Cleanup: deallocate memory.
     for (auto node : module->nodes) {
