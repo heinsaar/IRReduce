@@ -22,6 +22,7 @@ struct IrModule {
     std::map<std::string, IrNode*> nodeMap;
 };
 
+// Converts an IR module to a string representation.
 std::string to_string(IrModule* module) {
     std::stringstream result;
     for (auto node : module->nodes) {
@@ -36,8 +37,8 @@ std::string to_string(IrModule* module) {
 
 // Function to parse a minimal IR module from an input file.
 // The expected syntax for each line is:
-// Constant <name> = <value>
-// Add <name> = <operand1> + <operand2>
+//     Constant <name> = <value>
+//     Add <name> = <operand1> + <operand2>
 IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
@@ -75,8 +76,8 @@ IrModule* parseModule(const std::string& filename) {
     return module;
 }
 
-// Error predicate: In this minimal example, the property is preserved if the module contains at least one "Add" node
-// whose operands are defined.
+// The predicate of interest: in this minimal example, the property is preserved
+// if the module contains at least one "Add" node whose operands are defined.
 bool checkPrimaryPredicate(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
@@ -88,8 +89,8 @@ bool checkPrimaryPredicate(IrModule* module) {
     return false;
 }
 
-// Reduction function: attempts to remove a node (non-critical node, such as a "Constant") and checks whether the property holds.
-// Returns true if a reduction was applied.
+// Reduction function: attempts to remove a node (non-critical node, such as a "Constant")
+// and checks whether the property holds. Returns true if a reduction was applied.
 bool reduceModule(IrModule* module) {
     // Try removing non-"Add" nodes first to preserve the property.
     for (int i : zen::in(module->nodes.size())) {
@@ -118,6 +119,7 @@ bool reduceModule(IrModule* module) {
 }
 
 int main(int argc, char* argv[]) {
+    // Sanity check: ensure an input file is provided.
     if (argc < 2) {
         zen::log("Usage: irreduce <input_file>");
         return 1;
@@ -132,7 +134,7 @@ int main(int argc, char* argv[]) {
     zen::log("Original Module:\n");
     zen::log(module);
 
-    // Iterative reduction: apply reductions until no further change is possible.
+    // Apply reductions until no further change is possible.
     int reductionCount = 0;
     while (reduceModule(module)) {
         reductionCount++;
