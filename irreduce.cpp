@@ -108,12 +108,14 @@ bool reduceModule(IrModule* module) {
                 return true;
             }
             else {
+                zen::log(zen::color::red("predicate fails"), "after removing node", zen::quote(node->name));
                 // Revert removal if property is lost.
                 module->nodes.insert(module->nodes.begin() + i, node);
                 module->nodeMap[node->name] = node;
             }
         }
     }
+    zen::log("No further reduction possible.");
     return false; // No valid reduction could be applied.
 }
 
@@ -140,7 +142,7 @@ int main(int argc, char* argv[]) {
         // printModule(module);
     }
 
-    zen::log("final module after", reductionCount, "reductions:\n");
+    zen::log("Final module after", reductionCount, "reductions:\n");
     zen::log(module);
 
     // Cleanup: deallocate memory.
