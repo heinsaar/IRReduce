@@ -42,8 +42,7 @@ std::string to_string(IrModule* module) {
 IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
-        zen::log("Error opening file", zen::quote(filename));
-        std::string msg = "Error opening file " + zen::quote(filename);
+        std::string msg = "Unable to open the file " + std::string(zen::color::red(zen::quote(filename)));
         throw std::runtime_error(msg);
     }
     IrModule* module = new IrModule();
@@ -151,6 +150,6 @@ int main(int argc, char* argv[]) try {
     }
     delete module;
 } catch (const std::exception& e) {
-    zen::log(zen::color::red("EXCEPTION:"), e.what());
+    zen::log(zen::color::red("ERROR:"), e.what());
     return 1;
 }
