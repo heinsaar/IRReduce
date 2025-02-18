@@ -114,7 +114,7 @@ bool reduceModule(IrModule* module) {
         }
     }
     zen::log("No further reduction possible.");
-    return false; // No valid reduction could be applied.
+    return false;
 }
 
 int main(int argc, char* argv[]) {
