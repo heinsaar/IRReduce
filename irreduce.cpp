@@ -43,7 +43,8 @@ IrModule* parseModule(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
         zen::log("Error opening file", zen::quote(filename));
-        return nullptr;
+        std::string msg = "Error opening file " + zen::quote(filename);
+        throw std::runtime_error(msg);
     }
     IrModule* module = new IrModule();
     std::string line;
@@ -118,7 +119,7 @@ bool reduceModule(IrModule* module) {
     return false;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) try {
     // Sanity check: ensure an input file is provided.
     if (argc < 2) {
         zen::log("Usage: irreduce <input_file>");
@@ -129,7 +130,6 @@ int main(int argc, char* argv[]) {
 
     // Parse the input IR module.
     IrModule* module = parseModule(args.arg_at(1));
-    if (!module) return 1;
 
     zen::log("Original Module:\n");
     zen::log(module);
@@ -150,4 +150,7 @@ int main(int argc, char* argv[]) {
         delete node;
     }
     delete module;
+} catch (const std::exception& e) {
+    zen::log(zen::color::red("EXCEPTION:"), e.what());
+    return 1;
 }
