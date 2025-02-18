@@ -27,8 +27,7 @@ std::string to_string(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
             result << "Constant " << node->name << " = " << node->value << '\n';
-        }
-        else if (node->op == "Add") {
+        } else if (node->op == "Add") {
             result << "Add " << node->name << " = " << node->operandNames[0] << " + " << node->operandNames[1] << '\n';
         }
     }
@@ -106,8 +105,7 @@ bool reduceModule(IrModule* module) {
                 zen::log(zen::color::green("predicate holds"), "after removing node", zen::quote(node->name));
                 delete node;
                 return true;
-            }
-            else {
+            } else {
                 zen::log(zen::color::red("predicate fails"), "after removing node", zen::quote(node->name));
                 // Revert removal if property is lost.
                 module->nodes.insert(module->nodes.begin() + i, node);
