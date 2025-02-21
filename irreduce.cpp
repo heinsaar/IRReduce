@@ -150,7 +150,8 @@ int main(int argc, char* argv[]) try {
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(module);
 
-    // Cleanup: deallocate memory.
+    // Cleanup: deallocate memory. This will be rewritten later
+    // with proper resource management after this POC phase.
     for (auto node : module->nodes) {
         delete node;
     }
