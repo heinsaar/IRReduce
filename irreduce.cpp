@@ -144,8 +144,6 @@ int main(int argc, char* argv[]) try {
     int reduction_count = 0;
     while (reduceIR(module)) {
         reduction_count++;
-        // zen::log("\nAfter ", reduction_count, " reduction(s):\n");
-        // printModule(module);
     }
 
     zen::log("Final module after", reduction_count, "reductions:\n");
