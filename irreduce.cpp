@@ -135,14 +135,14 @@ int main(int argc, char* argv[]) try {
     zen::log(module);
 
     // Apply reductions until no further change is possible.
-    int reductionCount = 0;
+    int reduction_count = 0;
     while (reduceModule(module)) {
-        reductionCount++;
-        // zen::log("\nAfter ", reductionCount, " reduction(s):\n");
+        reduction_count++;
+        // zen::log("\nAfter ", reduction_count, " reduction(s):\n");
         // printModule(module);
     }
 
-    zen::log("Final module after", reductionCount, "reductions:\n");
+    zen::log("Final module after", reduction_count, "reductions:\n");
     zen::log(module);
 
     // Cleanup: deallocate memory.
