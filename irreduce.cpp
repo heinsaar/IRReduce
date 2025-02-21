@@ -122,7 +122,10 @@ int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
 
-    args.accept("--input_file");
+    if(!args.accept("--input_file").is_present()) {
+        throw std::invalid_argument("Missing required argument: --input_file");
+    }
+
     auto input_file = args.get_options("--input_file")[0];
 
     // Parse the input IR module.
