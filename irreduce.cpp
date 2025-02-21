@@ -128,6 +128,7 @@ int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
 
+    // Check if the required argument(s) are present.
     if(!args.accept(NAME::ARG::input_file).is_present()) {
         throw std::invalid_argument("Missing required argument: " + NAME::ARG::input_file);
     }
