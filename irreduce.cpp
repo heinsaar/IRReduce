@@ -91,7 +91,7 @@ bool checkPrimaryPredicate(IrModule* module) {
 
 // Reduction function: attempts to remove a node (non-critical node, such as a "Constant")
 // and checks whether the property holds. Returns true if a reduction was applied.
-bool reduceModule(IrModule* module) {
+bool reduceIR(IrModule* module) {
     // Try removing non-"Add" nodes first to preserve the property.
     for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) try {
 
     // Apply reductions until no further change is possible.
     int reduction_count = 0;
-    while (reduceModule(module)) {
+    while (reduceIR(module)) {
         reduction_count++;
         // zen::log("\nAfter ", reduction_count, " reduction(s):\n");
         // printModule(module);
