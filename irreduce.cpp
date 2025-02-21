@@ -118,15 +118,21 @@ bool reduceModule(IrModule* module) {
     return false;
 }
 
+namespace NAME {
+    namespace ARG {
+        static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
+    }
+};
+
 int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
 
-    if(!args.accept("--input_file").is_present()) {
-        throw std::invalid_argument("Missing required argument: --input_file");
+    if(!args.accept(NAME::ARG::input_file).is_present()) {
+        throw std::invalid_argument("Missing required argument: " + NAME::ARG::input_file);
     }
 
-    auto input_file = args.get_options("--input_file")[0];
+    auto input_file = args.get_options(NAME::ARG::input_file)[0];
 
     // Parse the input IR module.
     IrModule* module = parseModule(input_file);
