@@ -39,7 +39,7 @@ std::string to_string(IrModule* module) {
 // The expected syntax for each line is:
 //     Constant <name> = <value>
 //     Add <name> = <operand1> + <operand2>
-IrModule* parseModule(const std::string& filename) {
+IrModule* parseIR(const std::string& filename) {
     std::ifstream infile(filename);
     if (!infile) {
         std::string msg = "Unable to open the file " + std::string(zen::color::red(zen::quote(filename)));
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) try {
     auto input_file = args.get_options(NAME::ARG::input_file)[0];
 
     // Parse the input IR module.
-    IrModule* module = parseModule(input_file);
+    IrModule* module = parseIR(input_file);
 
     zen::log("Original Module:\n");
     zen::log(module);
