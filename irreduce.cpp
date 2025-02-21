@@ -119,16 +119,14 @@ bool reduceModule(IrModule* module) {
 }
 
 int main(int argc, char* argv[]) try {
-    // Sanity check: ensure an input file is provided.
-    if (argc < 2) {
-        zen::log("Usage: irreduce <input_file>");
-        return 1;
-    }
-    // All good, parse the command line arguments.
+    // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
 
+    args.accept("--input_file");
+    auto input_file = args.get_options("--input_file")[0];
+
     // Parse the input IR module.
-    IrModule* module = parseModule(args.arg_at(1));
+    IrModule* module = parseModule(input_file);
 
     zen::log("Original Module:\n");
     zen::log(module);
