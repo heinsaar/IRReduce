@@ -141,12 +141,12 @@ int main(int argc, char* argv[]) try {
     zen::log(module);
 
     // Apply reductions until no further change is possible.
-    int reduction_count = 0;
+    int pass_count = 0;
     while (reduceIR(module)) {
-        reduction_count++;
+        pass_count++;
     }
 
-    zen::log("Final module after", reduction_count, "reductions:\n");
+    zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(module);
 
     // Cleanup: deallocate memory.
