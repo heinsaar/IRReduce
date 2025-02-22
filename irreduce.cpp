@@ -1,4 +1,6 @@
-﻿#include <algorithm>
+﻿#include <functional>
+#include <algorithm>
+#include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -89,10 +91,23 @@ bool checkPrimaryPredicate(IrModule* module) {
     return false;
 }
 
-// Reduction function: attempts to remove a node (non-critical node, such as a "Constant")
-// and checks whether the property holds. Returns true if a reduction was applied.
-bool reduceIR(IrModule* module) {
-    // Try removing non-"Add" nodes first to preserve the property.
+// Type alias for a transformation pass function.
+using Pass = std::function<bool(IrModule*)>;
+
+// Pass registry: returns a reference to a static vector of passes.
+std::vector<Pass>& getPassRegistry() {
+    static std::vector<Pass> registry;
+    return registry;
+}
+
+// Function to register a new pass.
+void registerPass(Pass pass) {
+    getPassRegistry().push_back(pass);
+}
+
+// A reduction pass that attempts to remove a non-critical node ("Constant").
+// Returns true if a node was successfully removed while preserving the predicate.
+bool passReduction(IrModule* module) {
     for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
         if (node->op != "Add") {
@@ -127,7 +142,7 @@ namespace NAME {
 int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
-
+    
     // Check if the required argument(s) are present.
     if (!args.accept(NAME::ARG::input_file).is_present()) {
         throw std::invalid_argument("Missing required argument: " + NAME::ARG::input_file);
@@ -141,11 +156,20 @@ int main(int argc, char* argv[]) try {
     zen::log("Original Module:\n");
     zen::log(module);
 
-    // Apply reductions until no further change is possible.
+    registerPass(passReduction);
+
+    // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
-    while (reduceIR(module)) {
-        pass_count++;
-    }
+    bool pass_applied;
+    do { // Apply each pass in the registry.
+        pass_applied = false;
+        for (auto& pass : getPassRegistry()) {
+            if (pass(module)) {
+                pass_applied = true;
+                pass_count++;
+            }
+        }
+    } while (pass_applied);
 
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(module);
