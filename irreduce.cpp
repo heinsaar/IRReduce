@@ -79,9 +79,9 @@ IrModule* parseIR(const std::string& filename) {
     return module;
 }
 
-// The predicate of interest: in this minimal example, the property is preserved
-// if the module contains at least one "Add" node whose operands are defined.
-bool checkPrimaryPredicate(IrModule* module) {
+// Primary predicate: the IR invariant holds if the module contains
+// at least one "Add" node whose operands are defined.
+bool predicatePrimary(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
             if (module->nodeMap.contains(node->operandNames[0]) &&
@@ -127,6 +127,20 @@ std::vector<Pass>& getPassRegistry() {
 // Function to register a new pass.
 void registerPass(Pass pass) {
     getPassRegistry().push_back(pass);
+}
+
+// Type alias for a predicate function.
+using Predicate = std::function<bool(IrModule*)>;
+
+// Predicate registry: returns a reference to a static vector of predicates.
+std::vector<Predicate>& getPredicateRegistry() {
+    static std::vector<Predicate> registry;
+    return registry;
+}
+
+// Function to register a new predicate.
+void registerPredicate(Predicate pred) {
+    getPredicateRegistry().push_back(pred);
 }
 
 // A reduction pass that attempts to remove a non-critical node ("Constant").
@@ -197,6 +211,9 @@ int main(int argc, char* argv[]) try {
     // Register transformation passes.
     registerPass(passReduction);
     registerPass(passRemoveUnusedConstants);
+    
+    // Register predicates.
+    registerPredicate(predicatePrimary);
 
     // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
@@ -207,9 +224,16 @@ int main(int argc, char* argv[]) try {
             // Backup the current state of the module.
             IrModule* backup = cloneModule(module);
             if (pass(module)) {
-                // After applying the pass, check that the IR invariant holds.
-                if (!checkPrimaryPredicate(module)) {
-                    zen::log(zen::color::yellow("Predicate fails after most recent pass; reverting it..."));
+                // After applying the pass, verify all registered predicates.
+                bool invariant = true;
+                for (auto& pred : getPredicateRegistry()) {
+                    if (!pred(module)) {
+                        invariant = false;
+                        break;
+                    }
+                }
+                if (!invariant) {
+                    zen::log(zen::color::yellow("A predicate failed after most recent pass; reverting it..."));
                     freeModule(module);
                     module = backup; // Restore from backup.
                 } else {
@@ -223,10 +247,10 @@ int main(int argc, char* argv[]) try {
             }
         }
     } while (pass_applied);
-
+    
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(module);
-
+    
     // Cleanup: deallocate memory. This will be rewritten later
     // with proper resource management after this POC phase.
     freeModule(module);
