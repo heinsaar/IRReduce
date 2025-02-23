@@ -129,7 +129,7 @@ bool passReduction(IrModule* module) {
             }
         }
     }
-    zen::log("No further reduction possible.");
+    zen::log(std::string(zen::color::magenta(__func__)) + ":", "no further reduction possible.");
     return false;
 }
 
