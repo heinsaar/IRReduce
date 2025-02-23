@@ -189,6 +189,7 @@ bool passRemoveUnusedConstants(IrModule* module) {
 
 namespace NAME::ARG {
     static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
+    static const std::string invariants = "--invariants"; // Path to the external invariants script.
 };
 
 int main(int argc, char* argv[]) try {
