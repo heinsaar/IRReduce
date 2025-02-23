@@ -1,3 +1,4 @@
+Constant x = 0
 Constant a = 5
 Constant b = 3
 Constant c = 7
