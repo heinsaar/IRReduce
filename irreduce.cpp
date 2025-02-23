@@ -79,9 +79,9 @@ IrModule* parseIR(const std::string& filename) {
     return module;
 }
 
-// Primary predicate: the IR invariant holds if the module contains
+// Primary invariant: the IR invariant holds if the module contains
 // at least one "Add" node whose operands are defined.
-bool predicatePrimary(IrModule* module) {
+bool invariantPrimary(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
             if (module->nodeMap.contains(node->operandNames[0]) &&
@@ -129,18 +129,18 @@ void registerPass(Pass pass) {
     getPassRegistry().push_back(pass);
 }
 
-// Type alias for a predicate function.
-using Predicate = std::function<bool(IrModule*)>;
+// Type alias for a invariant function.
+using Invariant = std::function<bool(IrModule*)>;
 
-// Predicate registry: returns a reference to a static vector of predicates.
-std::vector<Predicate>& getPredicateRegistry() {
-    static std::vector<Predicate> registry;
+// Invariant registry: returns a reference to a static vector of invariants.
+std::vector<Invariant>& getInvariantRegistry() {
+    static std::vector<Invariant> registry;
     return registry;
 }
 
-// Function to register a new predicate.
-void registerPredicate(Predicate pred) {
-    getPredicateRegistry().push_back(pred);
+// Function to register a new invariant.
+void registerInvariant(Invariant pred) {
+    getInvariantRegistry().push_back(pred);
 }
 
 // A reduction pass that attempts to remove a non-critical node ("Constant").
@@ -212,8 +212,8 @@ int main(int argc, char* argv[]) try {
     registerPass(passReduction);
     registerPass(passRemoveUnusedConstants);
     
-    // Register predicates.
-    registerPredicate(predicatePrimary);
+    // Register invariants.
+    registerInvariant(invariantPrimary);
 
     // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
@@ -224,16 +224,16 @@ int main(int argc, char* argv[]) try {
             // Backup the current state of the module.
             IrModule* backup = cloneModule(module);
             if (pass(module)) {
-                // After applying the pass, verify all registered predicates.
+                // After applying the pass, verify all registered invariants.
                 bool invariant = true;
-                for (auto& pred : getPredicateRegistry()) {
+                for (auto& pred : getInvariantRegistry()) {
                     if (!pred(module)) {
                         invariant = false;
                         break;
                     }
                 }
                 if (!invariant) {
-                    zen::log(zen::color::yellow("A predicate failed after most recent pass; reverting it..."));
+                    zen::log(zen::color::yellow("A invariant failed after most recent pass; reverting it..."));
                     freeModule(module);
                     module = backup; // Restore from backup.
                 } else {
