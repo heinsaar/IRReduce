@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 #include "kaizen.h"
 
@@ -129,7 +130,7 @@ void registerPass(Pass pass) {
 }
 
 // A reduction pass that attempts to remove a non-critical node ("Constant").
-// Returns true if a node was successfully removed while preserving the predicate.
+// Returns true if a node was successfully removed.
 bool passReduction(IrModule* module) {
     for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
@@ -137,23 +138,39 @@ bool passReduction(IrModule* module) {
             // Temporarily remove the node.
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
-            zen::print("Reduction applied, ");
-
-            // Check if the property is still preserved.
-            if (checkPrimaryPredicate(module)) {
-                zen::log(zen::color::green("predicate holds"), "after removing node", zen::quote(node->name));
-                delete node;
-                return true;
-            } else {
-                zen::log(zen::color::red("predicate fails"), "after removing node", zen::quote(node->name));
-                // Revert removal if property is lost.
-                module->nodes.insert(module->nodes.begin() + i, node);
-                module->nodeMap[node->name] = node;
-            }
+            zen::log(std::string(zen::color::magenta(__func__)) + ":", "removed node", zen::quote(node->name));
+            delete node;
+            return true;
         }
     }
     zen::log(std::string(zen::color::magenta(__func__)) + ":", "no further reduction possible.");
     return false;
+}
+
+// Pass that removes all unused constants. It simply performs the removal.
+bool passRemoveUnusedConstants(IrModule* module) {
+    bool removed = false;
+    std::set<std::string> used_names;
+    // Collect all operand names from "Add" nodes.
+    for (auto node : module->nodes) {
+        if (node->op == "Add") {
+            for (const std::string& operand : node->operandNames) {
+                used_names.insert(operand);
+            }
+        }
+    }
+    // Remove nodes in reverse order to avoid invalidating iterators.
+    for (int i = module->nodes.size() - 1; i >= 0; --i) {
+        IrNode* node = module->nodes[i];
+        if (node->op == "Constant" && used_names.find(node->name) == used_names.end()) {
+            module->nodes.erase(module->nodes.begin() + i);
+            module->nodeMap.erase(node->name);
+            zen::log(std::string(zen::color::magenta(__func__)) + ":", "removed node", zen::quote(node->name));
+            delete node;
+            removed = true;
+        }
+    }
+    return removed;
 }
 
 namespace NAME::ARG {
@@ -177,7 +194,9 @@ int main(int argc, char* argv[]) try {
     zen::log("Original Module:\n");
     zen::log(module);
 
+    // Register transformation passes.
     registerPass(passReduction);
+    registerPass(passRemoveUnusedConstants);
 
     // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
@@ -185,9 +204,22 @@ int main(int argc, char* argv[]) try {
     do { // Apply each pass in the registry.
         pass_applied = false;
         for (auto& pass : getPassRegistry()) {
+            // Create a backup of the current module.
+            IrModule* backup = cloneModule(module);
             if (pass(module)) {
-                pass_applied = true;
-                pass_count++;
+                // After applying the pass, check that the IR invariant holds.
+                if (!checkPrimaryPredicate(module)) {
+                    zen::log(zen::color::red("Predicate fails after most recent pass; reverting it..."));
+                    freeModule(module);
+                    module = backup; // Restore from backup.
+                } else {
+                    // The pass is valid.
+                    pass_applied = true;
+                    pass_count++;
+                    freeModule(backup);
+                }
+            } else {
+                freeModule(backup);
             }
         }
     } while (pass_applied);
@@ -197,10 +229,7 @@ int main(int argc, char* argv[]) try {
 
     // Cleanup: deallocate memory. This will be rewritten later
     // with proper resource management after this POC phase.
-    for (auto node : module->nodes) {
-        delete node;
-    }
-    delete module;
+    freeModule(module);
 } catch (const std::exception& e) {
     zen::log(zen::color::red("ERROR:"), e.what());
     return 1;
