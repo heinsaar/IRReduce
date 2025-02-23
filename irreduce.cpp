@@ -210,10 +210,10 @@ int main(int argc, char* argv[]) try {
         throw std::runtime_error("No input file specified for argument: " + NAME::ARG::input_file);
     }
 
-    auto input_file = input_options[0];
+    auto input_file_path = input_options[0];
 
     // Parse the input IR module.
-    IrModule* module = parseIR(input_file);
+    IrModule* module = parseIR(input_file_path);
 
     zen::log("Original Module:\n");
     zen::log(module);
