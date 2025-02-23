@@ -218,10 +218,16 @@ int main(int argc, char* argv[]) try {
     zen::log("Original Module:\n");
     zen::log(module);
 
+    // At this point, (argc == 3) effectively means that there are three
+    // arguments passed to the program: first is the program name, second
+    // is the --input_file, and third is the option to it (the input file path).
+    // We interpret this scenario as if the caller wants to apply all passes.
+    const bool pass_all = (argc == 3);
+
     // Register transformation passes.
-    if (args.accept(NAME::ARG::pass_noncriticals).is_present())
+    if (pass_all || args.accept(NAME::ARG::pass_noncriticals).is_present())
         registerPass(passRemoveNoncriticals);
-    if (args.accept(NAME::ARG::pass_unusedconstants).is_present())
+    if (pass_all || args.accept(NAME::ARG::pass_unusedconstants).is_present())
         registerPass(passRemoveUnusedConstants);
     
     // Register invariants.
