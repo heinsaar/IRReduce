@@ -205,7 +205,12 @@ int main(int argc, char* argv[]) try {
         throw std::invalid_argument("Missing required argument: " + NAME::ARG::input_file);
     }
 
-    auto input_file = args.get_options(NAME::ARG::input_file)[0];
+    auto input_options = args.get_options(NAME::ARG::input_file);
+    if (input_options.empty()) {
+        throw std::runtime_error("No input file specified for argument: " + NAME::ARG::input_file);
+    }
+
+    auto input_file = input_options[0];
 
     // Parse the input IR module.
     IrModule* module = parseIR(input_file);
