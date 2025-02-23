@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) try {
                     }
                 }
                 if (!invariant) {
-                    zen::log(zen::color::yellow("A invariant failed after most recent pass; reverting it..."));
+                    zen::log(zen::color::yellow("An invariant failed after most recent pass; reverting it..."));
                     freeModule(module);
                     module = backup; // Restore from backup.
                 } else {
