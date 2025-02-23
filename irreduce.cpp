@@ -81,7 +81,7 @@ IrModule* parseIR(const std::string& filename) {
 
 // Primary invariant: the IR invariant holds if the module contains
 // at least one "Add" node whose operands are defined.
-bool invariantPrimary(IrModule* module) {
+bool invariantAddPresent(IrModule* module) {
     for (auto node : module->nodes) {
         if (node->op == "Add") {
             if (module->nodeMap.contains(node->operandNames[0]) &&
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) try {
     registerPass(passRemoveUnusedConstants);
     
     // Register invariants.
-    registerInvariant(invariantPrimary);
+    registerInvariant(invariantAddPresent);
 
     // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
