@@ -200,17 +200,21 @@ int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
     
-    // Check if the required argument(s) are present.
-    if (!args.accept(NAME::ARG::input_file).is_present()) {
-        throw std::invalid_argument("Missing required argument: " + NAME::ARG::input_file);
+    std::string input_file_path;
+    
+    if (args.accept(NAME::ARG::input_file).is_present()) {
+        auto input_options = args.get_options(NAME::ARG::input_file);
+        if (input_options.empty()) {
+            throw std::runtime_error("No input file specified for argument: " + NAME::ARG::input_file);
+        }
+        input_file_path = input_options[0];
+    } else if (argc > 1) {
+        // Assume first positional argument (after program name) is the input file
+        input_file_path = args.arg_at(1);
+    } else {
+        throw std::invalid_argument("Missing required argument: input file path. Specify it implicitly "
+            "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
     }
-
-    auto input_options = args.get_options(NAME::ARG::input_file);
-    if (input_options.empty()) {
-        throw std::runtime_error("No input file specified for argument: " + NAME::ARG::input_file);
-    }
-
-    auto input_file_path = input_options[0];
 
     // Parse the input IR module.
     IrModule* module = parseIR(input_file_path);
@@ -218,11 +222,13 @@ int main(int argc, char* argv[]) try {
     zen::log("Original Module:\n");
     zen::log(module);
 
-    // At this point, (argc == 3) effectively means that there are three
-    // arguments passed to the program: first is the program name, second
-    // is the --input_file, and third is the option to it (the input file path).
+    // At this point, (argc <= 3) effectively means that the at most three arguments
+    // passed to the program are:
+    //   1) The program name (always present)
+    //   2) The --input_file (optional)
+    //   3) The presumed input file path
     // We interpret this scenario as if the caller wants to apply all passes.
-    const bool pass_all = (argc == 3);
+    const bool pass_all = (argc <= 3);
 
     // Register transformation passes.
     if (pass_all || args.accept(NAME::ARG::pass_noncriticals).is_present())
