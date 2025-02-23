@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) try {
             if (pass(module)) {
                 // After applying the pass, check that the IR invariant holds.
                 if (!checkPrimaryPredicate(module)) {
-                    zen::log(zen::color::red("Predicate fails after most recent pass; reverting it..."));
+                    zen::log(zen::color::yellow("Predicate fails after most recent pass; reverting it..."));
                     freeModule(module);
                     module = backup; // Restore from backup.
                 } else {
