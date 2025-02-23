@@ -147,7 +147,7 @@ bool passReduction(IrModule* module) {
     return false;
 }
 
-// Pass that removes all unused constants. It simply performs the removal.
+// Pass that removes all unused constants.
 bool passRemoveUnusedConstants(IrModule* module) {
     bool removed = false;
     std::set<std::string> used_names;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) try {
     do { // Apply each pass in the registry.
         pass_applied = false;
         for (auto& pass : getPassRegistry()) {
-            // Create a backup of the current module.
+            // Backup the current state of the module.
             IrModule* backup = cloneModule(module);
             if (pass(module)) {
                 // After applying the pass, check that the IR invariant holds.
