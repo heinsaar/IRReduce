@@ -91,6 +91,29 @@ bool checkPrimaryPredicate(IrModule* module) {
     return false;
 }
 
+// Helper function: creates a deep copy of the module.
+IrModule* cloneModule(IrModule* module) {
+    IrModule* newModule = new IrModule();
+    for (auto node : module->nodes) {
+        IrNode* newNode = new IrNode();
+        newNode->name = node->name;
+        newNode->op = node->op;
+        newNode->operandNames = node->operandNames;
+        newNode->value = node->value;
+        newModule->nodes.push_back(newNode);
+        newModule->nodeMap[newNode->name] = newNode;
+    }
+    return newModule;
+}
+
+// Helper function: deallocates the module.
+void freeModule(IrModule* module) {
+    for (auto node : module->nodes) {
+        delete node;
+    }
+    delete module;
+}
+
 // Type alias for a transformation pass function.
 using Pass = std::function<bool(IrModule*)>;
 
