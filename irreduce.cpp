@@ -190,6 +190,10 @@ bool passRemoveUnusedConstants(IrModule* module) {
 namespace NAME::ARG {
     static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
     static const std::string invariants = "--invariants"; // Path to the external invariants script.
+
+    // Passes
+    static const std::string pass_noncriticals    = "--pass_noncriticals";    // Removes non-critical nodes.
+    static const std::string pass_unusedconstants = "--pass_unusedconstants"; // Removes unused constants.
 };
 
 int main(int argc, char* argv[]) try {
@@ -210,8 +214,10 @@ int main(int argc, char* argv[]) try {
     zen::log(module);
 
     // Register transformation passes.
-    registerPass(passRemoveNoncriticals);
-    registerPass(passRemoveUnusedConstants);
+    if (args.accept(NAME::ARG::pass_noncriticals).is_present())
+        registerPass(passRemoveNoncriticals);
+    if (args.accept(NAME::ARG::pass_unusedconstants).is_present())
+        registerPass(passRemoveUnusedConstants);
     
     // Register invariants.
     registerInvariant(invariantAddPresent);
