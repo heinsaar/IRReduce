@@ -216,6 +216,29 @@ int main(int argc, char* argv[]) try {
     // Register invariants.
     registerInvariant(invariantAddPresent);
 
+    // If the user provides an external invariants script, register its invariant.
+    if (args.accept(NAME::ARG::invariants).is_present()) {
+        auto invariants_script = args.get_options(NAME::ARG::invariants)[0];
+        zen::log("Using external invariants script:", zen::quote(invariants_script));
+        registerInvariant([invariants_script](IrModule* module) -> bool {
+            // Write the IR module to a temporary file.
+            char tmp_filename[L_tmpnam];
+            tmpnam(tmp_filename); // Note: use tmpnam for now, but it's not secure. Will be replaced.
+            std::ofstream tmp_file(tmp_filename);
+            if (!tmp_file) {
+                throw std::runtime_error("Failed to create temporary file for invariants check.");
+            }
+            tmp_file << to_string(module);
+            tmp_file.close();
+            // Execute the user-provided invariants script.
+            std::string command = "sh " + invariants_script + " " + tmp_filename;
+            zen::log("Executing command:", zen::quote(command));
+            int ret = system(command.c_str());
+            std::remove(tmp_filename);
+            return (ret == 0);
+        });
+    }
+
     // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
     bool pass_applied;
