@@ -222,10 +222,23 @@ int main(int argc, char* argv[]) try {
     zen::log("Original Module:\n");
     zen::log(module);
 
-    // Register transformation passes.
-    if (args.accept(NAME::ARG::pass_noncriticals).is_present())
+    // Check for individual passes.
+    bool pass_noncriticals    = args.accept(NAME::ARG::pass_noncriticals).is_present();
+    bool pass_unusedconstants = args.accept(NAME::ARG::pass_unusedconstants).is_present();
+
+    // Determine if any passes are explicitly specified.
+    bool has_explicit_passes = pass_noncriticals || pass_unusedconstants;
+
+    // Apply all passes if none are explicitly specified.
+    bool apply_all_passes = !has_explicit_passes;
+
+    zen::log("Applying passes:", apply_all_passes ? "all" : "those specified explicitly.");
+
+    // Register transformation passes based on the input flags.
+    if (apply_all_passes || pass_noncriticals)
         registerPass(passRemoveNoncriticals);
-    if (args.accept(NAME::ARG::pass_unusedconstants).is_present())
+
+    if (apply_all_passes || pass_unusedconstants)
         registerPass(passRemoveUnusedConstants);
     
     // Register invariants.
