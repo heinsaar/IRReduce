@@ -145,7 +145,7 @@ void registerInvariant(Invariant pred) {
 
 // A reduction pass that attempts to remove a non-critical node ("Constant").
 // Returns true if a node was successfully removed.
-bool passReduction(IrModule* module) {
+bool passRemoveNoncriticals(IrModule* module) {
     for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
         if (node->op != "Add") {
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) try {
     zen::log(module);
 
     // Register transformation passes.
-    registerPass(passReduction);
+    registerPass(passRemoveNoncriticals);
     registerPass(passRemoveUnusedConstants);
     
     // Register invariants.
