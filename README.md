@@ -70,5 +70,30 @@ If you want to develop using MSVC compiler from Visual Studio Code, there are va
    ```bash
    .\irreduce.exe <ir_file>
    ```
-
-A build and run will produce a console output that will look like this:
+   For example, using the toy (demo) IR files in the `ir` directory:
+   ```bash
+   ./irreduce ../ir/ir_1.txt
+   ```
+   Will produce an output like the following:
+   ```
+   Original Module:
+    
+   Constant x = 0
+   Constant a = 5
+   Constant b = 3
+   Constant c = 7
+   Add d = a + b
+   Add e = d + c
+    
+   Applying passes: all
+   passRemoveNoncriticals: removed node "x"
+   passRemoveNoncriticals: removed node "a"
+   passRemoveNoncriticals: removed node "b"
+   passRemoveNoncriticals: removed node "c"
+   An invariant failed after the most recent pass; reverting it... 
+   Final module after 3 reductions:
+   
+   Constant c = 7
+   Add d = a + b
+   Add e = d + c
+   ```
