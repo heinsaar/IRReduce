@@ -277,14 +277,14 @@ int main(int argc, char* argv[]) try {
             IrModule* backup = cloneModule(module);
             if (pass(module)) {
                 // After applying the pass, verify all registered invariants.
-                bool invariant = true;
+                bool invariant_ok = true;
                 for (auto& inv : getInvariantRegistry()) {
                     if (!inv(module)) {
-                        invariant = false;
+                        invariant_ok = false;
                         break;
                     }
                 }
-                if (!invariant) {
+                if (!invariant_ok) {
                     zen::log(zen::color::yellow("An invariant failed after the most recent pass; reverting it..."));
                     freeModule(module);
                     module = backup; // Restore from backup.
