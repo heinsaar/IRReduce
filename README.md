@@ -4,9 +4,9 @@ IRReduce is a tool for reducing IRs to a minimal form that preserves user-provid
 
 ## Build & Run on Windows & Linux (including [WSL](https://learn.microsoft.com/en-us/windows/wsl/install))
 
-1. **Open a Terminal:** You can open a terminal window by searching for "Terminal" in your Linux desktop's application menu or by using the keyboard shortcut (usually `Ctrl+Alt+T`).
+1. **Clone this repo:** Create a local copy of this repository on your machine.
 
-2. **Navigate to Project Directory:** Use the `cd` command to navigate to the directory where your project's `CMakeLists.txt` file is located. Replace `path/to/your/cloned/dir` with the actual path:
+2. **Navigate into the cloned repo directory:** `cd` into the directory (where your project's `CMakeLists.txt` file is located). Replace `path/to/your/cloned/dir` with the actual path:
 
    ```bash
    cd path/to/your/cloned/dir
@@ -24,8 +24,6 @@ IRReduce is a tool for reducing IRs to a minimal form that preserves user-provid
    ```bash
    cmake ..
    ```
-This will generate convenience utility scripts `runbuild_win.bat` and `runbuild_linx.sh` that combine the next steps 5 and 6, so you can simply call the corresponding script for your environment.
-
 **NOTE:** This will only work smoothly either within a Linux environment (including [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)) or from within a Windows terminal that's integrated
 into Visual Studio (not Visual Studio Code), where the integrated terminal automatically sets up all the necessary environment variables (pointing to the MSVC compiler `cl.exe`, etc.) that are
 automatically configured when you run Visual Studio's own developer command prompt.
