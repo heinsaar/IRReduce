@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) try {
         // Assume first positional argument (after program name) is the input file
         input_file_path = args.arg_at(1);
     } else {
-        throw std::invalid_argument("Missing required argument: input file path. Specify it implicitly "
+        throw std::invalid_argument("Missing required argument(s): input file path. Specify it implicitly "
             "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
     }
 
