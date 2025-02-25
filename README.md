@@ -1,6 +1,6 @@
 # IRReduce
 
-A tool for reducing IRs to a minimal form that preserves user-provided properties.
+IRReduce is a tool for reducing IRs to a minimal form that preserves user-provided invariants.
 
 ## Build & Run on Windows & Linux (including [WSL](https://learn.microsoft.com/en-us/windows/wsl/install))
 
@@ -51,7 +51,7 @@ If you want to develop using MSVC compiler from Visual Studio Code, there are va
    cmake -DCMAKE_CXX_COMPILER=g++ ..
    ```
 
-5. **Compile the Project:** After configuring, you can compile the project with:
+5. **Build the Project:** After configuring, you can compile the project with:
 
    ```bash
    cmake --build .
@@ -64,11 +64,11 @@ If you want to develop using MSVC compiler from Visual Studio Code, there are va
    Linux:
 
    ```bash
-   ./IRReduce
+   ./irreduce <ir_file>
    ```
    Windows:
    ```bash
-   .\IRReduce.exe
+   .\irreduce.exe <ir_file>
    ```
 
 A build and run will produce a console output that will look like this:
