@@ -139,8 +139,8 @@ std::vector<Invariant>& getInvariantRegistry() {
 }
 
 // Function to register a new invariant.
-void registerInvariant(Invariant pred) {
-    getInvariantRegistry().push_back(pred);
+void registerInvariant(Invariant inv) {
+    getInvariantRegistry().push_back(inv);
 }
 
 // A reduction pass that attempts to remove a non-critical node ("Constant").
@@ -278,8 +278,8 @@ int main(int argc, char* argv[]) try {
             if (pass(module)) {
                 // After applying the pass, verify all registered invariants.
                 bool invariant = true;
-                for (auto& pred : getInvariantRegistry()) {
-                    if (!pred(module)) {
+                for (auto& inv : getInvariantRegistry()) {
+                    if (!inv(module)) {
                         invariant = false;
                         break;
                     }
