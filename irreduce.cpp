@@ -38,6 +38,10 @@ std::string to_string(IrModule* module) {
     return result.str();
 }
 
+std::string to_string(IrNode* node) {
+    return zen::to_string("Node:", node->name, node->op, node->operandNames);
+}
+
 // Function to parse a minimal IR module from an input file.
 // The expected syntax for each line is:
 //     Constant <name> = <value>
