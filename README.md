@@ -70,27 +70,25 @@ If you want to develop using MSVC compiler from Visual Studio Code, there are va
    ```
    For example, using the toy (demo) IR files in the `ir` directory:
    ```bash
-   ./irreduce ../ir/ir_1.txt
+   ./irreduce ../ir/ir_1.txt --pass_unusedconstants
    ```
    Will produce an output like the following:
    ```
    Original Module:
-    
+
    Constant x = 0
    Constant a = 5
    Constant b = 3
    Constant c = 7
    Add d = a + b
    Add e = d + c
-    
-   Applying passes: all
-   passRemoveNoncriticals: removed node "x"
-   passRemoveNoncriticals: removed node "a"
-   passRemoveNoncriticals: removed node "b"
-   passRemoveNoncriticals: removed node "c"
-   An invariant failed after the most recent pass; reverting it... 
-   Final module after 3 reductions:
    
+   Applying passes: those specified explicitly.
+   passRemoveUnusedConstants: removed node "x"
+   Final module after 1 reductions:
+   
+   Constant a = 5
+   Constant b = 3
    Constant c = 7
    Add d = a + b
    Add e = d + c
