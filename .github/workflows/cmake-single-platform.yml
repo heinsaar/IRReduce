@@ -37,6 +37,10 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
             
+    - name: Find Executable
+      working-directory: ${{github.workspace}}/build
+      run: ls -R
+
     - name: Run Executable
       working-directory: ${{github.workspace}}/build
       run: ./irreduce ../ir/ir_1.txt --pass_unusedconstants
