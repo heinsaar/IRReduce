@@ -26,15 +26,41 @@ struct IrModule {
 };
 
 // Converts an IR module to a string representation.
+// Converts an IR module to a string representation (HLO style).
 std::string to_string(IrModule* module) {
     std::stringstream result;
+
+    result << "HloModule todo_replace_me_with_original_name\n\n";
+    result << "ENTRY main {\n";
+
     for (auto node : module->nodes) {
         if (node->op == "Constant") {
-            result << "Constant " << node->name << " = " << node->value << '\n';
+            result << "  " << node->name
+                   << " = s32[] constant(" << node->value << ")\n";
         } else if (node->op == "Add") {
-            result << "Add " << node->name << " = " << node->operandNames[0] << " + " << node->operandNames[1] << '\n';
+            result << "  " << node->name
+                   << " = s32[] add(" << node->operandNames[0]
+                   << ", " << node->operandNames[1] << ")\n";
         }
     }
+
+    // Simple default ROOT: bundle all nodes into a tuple.
+    result << "  ROOT root = (";
+    for (size_t i = 0; i < module->nodes.size(); ++i) {
+        result << "s32[] " << module->nodes[i]->name;
+        if (i + 1 < module->nodes.size())
+            result << ", ";
+    }
+    result << ") tuple(";
+    for (size_t i = 0; i < module->nodes.size(); ++i) {
+        result << module->nodes[i]->name;
+        if (i + 1 < module->nodes.size())
+            result << ", ";
+    }
+    result << ")\n";
+
+    result << "}\n";
+
     return result.str();
 }
 
@@ -42,43 +68,64 @@ std::string to_string(IrNode* node) {
     return zen::to_string("Node:", node->name, node->op, node->operandNames);
 }
 
-// Function to parse a minimal IR module from an input file.
-// The expected syntax for each line is:
-//     Constant <name> = <value>
-//     Add <name> = <operand1> + <operand2>
-IrModule* parseIR(const std::string& filename) {
-    std::ifstream infile(filename);
-    if (!infile) {
-        std::string msg = "Unable to open the file " + std::string(zen::color::red(zen::quote(filename)));
-        throw std::runtime_error(msg);
-    }
+// ──────────────────────────────────────────────────────────────────────────────
+//  HLO-aware parser (uses zen::string throughout)
+//  Accepts a subset that is sufficient for your example:
+//
+//      <name> = s32[] constant(<int>)
+//      <name> = s32[] add(<op1>, <op2>)
+//
+//  Everything else (HloModule header, ENTRY line, braces, ROOT tuple, layout
+//  annotations, comments, blank lines) is ignored.
+// ──────────────────────────────────────────────────────────────────────────────
+IrModule* parseIR(const std::string& filename)
+{
+    std::ifstream fin(filename);
+    if (!fin)
+        throw std::runtime_error("Unable to open " + filename);
+
     IrModule* module = new IrModule();
-    std::string line;
-    while (std::getline(infile, line)) {
-        if (line.empty()) continue;
-        std::istringstream iss(line);
-        std::string op;
-        iss >> op;         // read the operation type
-        IrNode* node = new IrNode();
-        node->op = op;
-        iss >> node->name; // read the node name
-        // Skip the '=' token.
-        std::string eq;
-        iss >> eq;
-        if (op == "Constant") {
-            int val;
-            iss >> val;
-            node->value = val;
-        } else if (op == "Add") {
-            std::string operand1, plus, operand2;
-            iss >> operand1 >> plus >> operand2;
-            node->operandNames.push_back(operand1);
-            node->operandNames.push_back(operand2);
-        } else {
-            zen::log("Unknown operation type: ", zen::quote(op));
+
+    // ── pre-compiled regexes ──────────────────────────────────────────────────
+    const std::regex reConst(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*constant\((\-?\d+)\)\s*$)");
+    const std::regex reAdd(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*add\(\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*\)\s*$)");
+
+    zen::string line;
+    while (std::getline(fin, line)) {
+        line.trim();                 // drop leading / trailing white–space
+        if (line.is_empty()) continue;
+        if (line[0] == '#')  continue; // ignore comments
+        if (line.contains("HloModule")
+        || line.contains("ENTRY")
+        || line.contains("{")
+        || line.contains("}")
+        || line.contains("ROOT"))
+            continue; // skip structural noise
+
+        std::smatch m;
+        if (std::regex_match(line, m, reConst)) {
+            //   m[1] = name     m[2] = value
+            IrNode* n = new IrNode();
+            n->name = m[1].str();
+            n->op = "Constant";
+            n->value = std::stoi(m[2].str());
+            module->nodes.push_back(n);
+            module->nodeMap[n->name] = n;
+            continue;
         }
-        module->nodes.push_back(node);
-        module->nodeMap[node->name] = node;
+        if (std::regex_match(line, m, reAdd)) {
+            //   m[1] = name   m[2] = lhs   m[3] = rhs
+            IrNode* n = new IrNode();
+            n->name = m[1].str();
+            n->op = "Add";
+            n->operandNames = { m[2].str(), m[3].str() };
+            module->nodes.push_back(n);
+            module->nodeMap[n->name] = n;
+            continue;
+        }
+
+        // Non-empty but still unrecognised: warn, keep going
+        zen::log("HLO parser: ignored line:", zen::quote(line));
     }
     return module;
 }
