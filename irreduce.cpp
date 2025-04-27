@@ -202,9 +202,9 @@ namespace NAME::ARG {
 
 const char* get_default_input_file_path() {
 #ifdef _WIN32
-    return "../../../ir/ir_1.txt";
+    return "../../../ir/hlo_1.ir";
 #else
-    return "../ir/ir_1.txt";
+    return "../ir/hlo_1.ir";
 #endif
 }
 
