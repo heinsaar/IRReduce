@@ -125,7 +125,7 @@ IrModule* parseIR(const std::string& filename)
         }
 
         // Non-empty but still unrecognised: warn, keep going
-        zen::log("HLO parser: ignored line:", zen::quote(line));
+        zen::log("HLO parser: ignored unsupported or unfamiliar line:", zen::quote(line));
     }
     return module;
 }
