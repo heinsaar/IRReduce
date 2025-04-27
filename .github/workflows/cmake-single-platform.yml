@@ -14,9 +14,7 @@ env:
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # Using a matrix build to achieve cross-platform coverage (Linux and Windows).
-    # See: https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    # Matrix build for Linux + Windows
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -26,31 +24,28 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make (Linux).
-      # On Windows, generators like Visual Studio use multi-config, so the build type is specified at build time instead.
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Use *relative* build directory to avoid drive-letter path mangling on Windows.
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      shell: bash
 
     - name: Build
-      # Build your program with the given configuration.
-      # On Windows, `--config` specifies the build type for multi-config generators like Visual Studio.
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Works for single-config (make) and multi-config (Visual Studio) generators alike.
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+      shell: bash
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.
-      # `-C` specifies the configuration (build type) when using multi-config generators (Windows).
+      working-directory: build
+      # Execute CTest with the selected configuration on both platforms.
       run: ctest -C ${{env.BUILD_TYPE}}
-      shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      shell: bash
 
     - name: Run Executable
-      working-directory: ${{github.workspace}}/build
-      # Run the built executable. Adapt path and executable name based on OS differences.
+      working-directory: build
+      # Platform-specific binary name and path.
       run: |
-        if ($env:RUNNER_OS -eq "Windows") {
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
           ./Release/IRReduce.exe ../ir/ir_1.txt --pass_unusedconstants
-        } else {
+        else
           ./IRReduce ../ir/ir_1.txt --pass_unusedconstants
-        }
-      shell: pwsh
+        fi
+      shell: bash
