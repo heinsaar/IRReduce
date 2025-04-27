@@ -44,8 +44,8 @@ jobs:
       # Platform-specific binary name and path.
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]]; then
-          ./Release/IRReduce.exe ../ir/toy_1.ir --pass_unusedconstants
+          ./Release/IRReduce.exe ../ir/hlo_1.ir --pass_unusedconstants
         else
-          ./IRReduce ../ir/toy_1.ir --pass_unusedconstants
+          ./IRReduce ../ir/hlo_1.ir --pass_unusedconstants
         fi
       shell: bash
