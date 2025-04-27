@@ -40,6 +40,10 @@ project ("IRReduce")
 # Add source to this project's executable.
 add_executable (IRReduce "irreduce.cpp" "irreduce.h" "kaizen.h")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_definitions(NDEBUG)
+endif()
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET IRReduce PROPERTY CXX_STANDARD 20)
 endif()
