@@ -1,8 +1,11 @@
-HloModule MatMulExample
+HloModule toy_example
 
-ENTRY MatMul {
-  lhs = f32[2, 3] parameter(0)
-  rhs = f32[3, 4] parameter(1)
-  dot = f32[2, 4] dot(lhs, rhs), lhs_contracting_dims={1}, rhs_contracting_dims={0}
-  ROOT result = f32[2, 4] copy(dot)
+ENTRY main {
+  x = s32[] constant(0)
+  a = s32[] constant(5)
+  b = s32[] constant(3)
+  c = s32[] constant(7)
+  d = s32[] add(a, b)
+  e = s32[] add(d, c)
+  ROOT result = (s32[], s32[], s32[], s32[], s32[], s32[]) tuple(x, a, b, c, d, e)
 }
