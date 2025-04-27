@@ -200,10 +200,18 @@ namespace NAME::ARG {
     static const std::string pass_unusedconstants = "--pass_unusedconstants"; // Removes unused constants.
 };
 
+const char* get_default_input_file_path() {
+#ifdef _WIN32
+    return "../../../ir/ir_1.txt";
+#else
+    return "../ir/ir_1.txt";
+#endif
+}
+
 int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
-    
+
     std::string input_file_path;
     
     if (args.accept(NAME::ARG::input_file).is_present()) {
@@ -216,8 +224,13 @@ int main(int argc, char* argv[]) try {
         // Assume first positional argument (after program name) is the input file
         input_file_path = args.arg_at(1);
     } else {
+#ifndef NDEBUG
+        input_file_path = get_default_input_file_path(); // no input file specified, use default for debugging
+        zen::log("No input file specified, using default for debugging:", zen::color::yellow(zen::quote(input_file_path)));
+#else
         throw std::invalid_argument("Missing required argument(s): input file path. Specify it implicitly "
             "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
+#endif
     }
 
     // Parse the input IR module.
