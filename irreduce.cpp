@@ -92,7 +92,7 @@ IrModule* parseIR(const std::string& filename)
 
     zen::string line;
     while (std::getline(fin, line)) {
-        line.trim();                 // drop leading / trailing white–space
+        line.trim();                   // drop leading / trailing white–space
         if (line.is_empty()) continue;
         if (line[0] == '#')  continue; // ignore comments
         if (line.contains("HloModule")
