@@ -28,9 +28,7 @@ if [ ! -f Makefile ]; then
 fi
 
 # Build
-cmake --build . --config $BUILD_TYPE
-if [ $? -eq 0 ]; then
-    # Run
+if cmake --build . --config $BUILD_TYPE; then
     ./IRReduce --input_file ../ir/hlo_1.ir --pass_inlineintermediates
 else
   echo "Build failed. Exiting."
