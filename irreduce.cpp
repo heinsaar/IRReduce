@@ -191,6 +191,57 @@ bool passRemoveUnusedConstants(IrModule* module) {
     return removed;
 }
 
+// Pass that removes any intermediate adds that can later be reduced to a single add.
+bool passInlineIntermediates(IrModule* module) {
+    std::map<std::string, int> usageCount;
+
+    // 1. Count usage of each node
+    for (auto* node : module->nodes) {
+        if (node->op == "Add") {
+            for (const auto& op : node->operandNames) {
+                usageCount[op]++;
+            }
+        }
+    }
+
+    bool changed = false;
+
+    // 2. Inline candidates
+    for (int i = 0; i < module->nodes.size(); ++i) {
+        IrNode* consumer = module->nodes[i];
+        if (consumer->op != "Add") continue;
+
+        // Loop over operands to try replacing one
+        for (int j = 0; j < consumer->operandNames.size(); ++j) {
+            const std::string& name = consumer->operandNames[j];
+            if (usageCount[name] != 1) continue;
+
+            // Is it an Add we can inline?
+            IrNode* producer = module->nodeMap[name];
+            if (!producer || producer->op != "Add") continue;
+
+            // Replace consumer operand j with producer's two operands
+            consumer->operandNames.erase(consumer->operandNames.begin() + j);
+            consumer->operandNames.insert(
+                consumer->operandNames.begin() + j,
+                producer->operandNames.begin(),
+                producer->operandNames.end()
+            );
+
+            // Remove producer node
+            auto it = std::find(module->nodes.begin(), module->nodes.end(), producer);
+            if (it != module->nodes.end()) module->nodes.erase(it);
+            module->nodeMap.erase(producer->name);
+            delete producer;
+
+            changed = true;
+            break; // Only inline one at a time per pass
+        }
+    }
+
+    return changed;
+}
+
 namespace NAME::ARG {
     static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
     static const std::string invariants = "--invariants"; // Path to the external invariants script.
@@ -198,6 +249,8 @@ namespace NAME::ARG {
     // Passes
     static const std::string pass_noncriticals    = "--pass_noncriticals";    // Removes non-critical nodes.
     static const std::string pass_unusedconstants = "--pass_unusedconstants"; // Removes unused constants.
+    static const std::string pass_inlineintermediates = "--pass_inlineintermediates"; // Inlines intermediate adds.
+
 };
 
 int main(int argc, char* argv[]) try {
@@ -229,6 +282,7 @@ int main(int argc, char* argv[]) try {
     // Check for individual passes.
     bool pass_noncriticals    = args.accept(NAME::ARG::pass_noncriticals).is_present();
     bool pass_unusedconstants = args.accept(NAME::ARG::pass_unusedconstants).is_present();
+    bool pass_inlineintermediates   = args.accept(NAME::ARG::pass_inlineintermediates).is_present();
 
     // Determine if any passes are explicitly specified.
     bool has_explicit_passes = pass_noncriticals || pass_unusedconstants;
@@ -244,6 +298,9 @@ int main(int argc, char* argv[]) try {
 
     if (apply_all_passes || pass_unusedconstants)
         registerPass(passRemoveUnusedConstants);
+    
+    if(apply_all_passes || pass_inlineintermediates)
+        registerPass(passInlineIntermediates);
     
     // Register invariants.
     registerInvariant(invariantAddPresent);
