@@ -25,7 +25,6 @@ struct IrModule {
     std::map<std::string, IrNode*> nodeMap;
 };
 
-// Converts an IR module to a string representation.
 // Converts an IR module to a string representation (HLO style).
 std::string to_string(IrModule* module) {
     std::stringstream result;
