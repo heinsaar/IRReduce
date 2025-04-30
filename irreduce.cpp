@@ -79,18 +79,18 @@ std::string to_string(IrNode* node) {
 // ──────────────────────────────────────────────────────────────────────────────
 IrModule* parseIR(const std::string& filename)
 {
-    std::ifstream fin(filename);
-    if (!fin)
+    std::ifstream ir_file(filename);
+    if (!ir_file)
         throw std::runtime_error("Unable to open " + filename);
 
     IrModule* module = new IrModule();
 
     // ── pre-compiled regexes ──────────────────────────────────────────────────
-    const std::regex reConst(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*constant\((\-?\d+)\)\s*$)");
-    const std::regex reAdd(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*add\(\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*\)\s*$)");
+    const std::regex re_const(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*constant\((\-?\d+)\)\s*$)");
+    const std::regex re_add(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*add\(\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*\)\s*$)");
 
     zen::string line;
-    while (std::getline(fin, line)) {
+    while (std::getline(ir_file, line)) {
         line.trim();                   // drop leading / trailing white–space
         if (line.is_empty()) continue;
         if (line[0] == '#')  continue; // ignore comments
@@ -102,7 +102,7 @@ IrModule* parseIR(const std::string& filename)
             continue; // skip structural noise
 
         std::smatch m;
-        if (std::regex_match(line, m, reConst)) {
+        if (std::regex_match(line, m, re_const)) {
             //   m[1] = name     m[2] = value
             IrNode* n = new IrNode();
             n->name = m[1].str();
@@ -112,7 +112,7 @@ IrModule* parseIR(const std::string& filename)
             module->nodeMap[n->name] = n;
             continue;
         }
-        if (std::regex_match(line, m, reAdd)) {
+        if (std::regex_match(line, m, re_add)) {
             //   m[1] = name   m[2] = lhs   m[3] = rhs
             IrNode* n = new IrNode();
             n->name = m[1].str();
@@ -144,17 +144,17 @@ bool invariantAddPresent(IrModule* module) {
 
 // Helper function: creates a deep copy of the module.
 IrModule* cloneModule(IrModule* module) {
-    IrModule* newModule = new IrModule();
+    IrModule* new_module = new IrModule();
     for (auto node : module->nodes) {
-        IrNode* newNode = new IrNode();
-        newNode->name = node->name;
-        newNode->op = node->op;
-        newNode->operandNames = node->operandNames;
-        newNode->value = node->value;
-        newModule->nodes.push_back(newNode);
-        newModule->nodeMap[newNode->name] = newNode;
+        IrNode* new_node = new IrNode();
+        new_node->name = node->name;
+        new_node->op = node->op;
+        new_node->operandNames = node->operandNames;
+        new_node->value = node->value;
+        new_module->nodes.push_back(new_node);
+        new_module->nodeMap[new_node->name] = new_node;
     }
-    return newModule;
+    return new_module;
 }
 
 // Helper function: deallocates the module.
