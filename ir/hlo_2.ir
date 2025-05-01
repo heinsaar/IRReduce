@@ -1,0 +1,12 @@
+HloModule extended_tensors
+
+ENTRY main {
+  a = s32[] constant(5)
+  b = s32[] constant(3)
+  c = s32[] constant(7)
+  x = pred[1] constant(true)
+  y = f32[2] constant({1.0, 2.5})
+  z = f32[2] add(y, y)
+  r = pred[1] add(x, x)
+  ROOT result = (pred[1], f32[2], f32[2], pred[1]) tuple(x, y, z, r)
+}

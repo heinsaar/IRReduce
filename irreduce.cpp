@@ -25,12 +25,12 @@ namespace NAME::OP {
     static const std::string add      = "add";
 };
 
-// IR Node representing a single operation.
 struct IrNode {
-    std::string name;
-    std::string op;                        // Operation type: "constant" or "add"
-    std::vector<std::string> operandNames; // For "add", stores operand names
-    int value;                             // Used if op == "constant"
+    std::string name;                      // node symbol
+    std::string op;                        // "constant", "add", ...
+    std::string type;                      // tensor type literal
+    std::vector<std::string> operandNames; // user-defined names of operands
+    std::string value;                     // raw constant payload
 };
 
 // IR Module containing a list of nodes and a lookup table.
@@ -64,10 +64,10 @@ std::string to_string(IrModule* module) {
 
     result << "  ROOT root = (";
     for (size_t i = 0; i < module->nodes.size(); ++i) {
-        result << "s32[] " << module->nodes[i]->name;
-        if (i + 1 < module->nodes.size())
-            result << ", ";
+        result << module->nodes[i]->type << ' ' << module->nodes[i]->name;
+        if (i + 1 < module->nodes.size()) result << ", ";
     }
+
     result << ") tuple(";
     for (size_t i = 0; i < module->nodes.size(); ++i) {
         result << module->nodes[i]->name;
@@ -105,9 +105,11 @@ IrModule* parseIR(const std::string& filename)
 
     IrModule* module = new IrModule();
 
-    // ── pre-compiled regexes ──────────────────────────────────────────────────
-    const std::regex re_const(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*constant\((\-?\d+)\)\s*$)");
-    const std::regex re_add(R"(^\s*([A-Za-z_]\w*)\s*=\s*s32\[\]\s*add\(\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*\)\s*$)");
+    // <name> = <type> constant(<payload>)
+    const std::regex re_const(R"(^\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z0-9_\[\],]+)\s*constant\(\s*([^)]+)\s*\)\s*$)");
+
+    // <name> = <type> add(<lhs>, <rhs>)
+    const std::regex re_add(R"(^\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z0-9_\[\],]+)\s*add\(\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*\)\s*$)");
 
     zen::string line;
     while (std::getline(ir_file, line)) {
@@ -123,21 +125,21 @@ IrModule* parseIR(const std::string& filename)
 
         std::smatch m;
         if (std::regex_match(line, m, re_const)) {
-            //   m[1] = name     m[2] = value
-            IrNode* n = new IrNode();
-            n->name = m[1].str();
+            auto* n = new IrNode{};
+            n->name = m[1];
+            n->type = m[2];
             n->op = NAME::OP::constant;
-            n->value = std::stoi(m[2].str());
+            n->value = m[3];
             module->nodes.push_back(n);
             module->nodeMap[n->name] = n;
             continue;
         }
         if (std::regex_match(line, m, re_add)) {
-            //   m[1] = name   m[2] = lhs   m[3] = rhs
-            IrNode* n = new IrNode();
-            n->name = m[1].str();
+            auto* n = new IrNode{};
+            n->name = m[1];
+            n->type = m[2];
             n->op = NAME::OP::add;
-            n->operandNames = { m[2].str(), m[3].str() };
+            n->operandNames = { m[3], m[4] };
             module->nodes.push_back(n);
             module->nodeMap[n->name] = n;
             continue;
@@ -170,6 +172,7 @@ IrModule* cloneModule(IrModule* module) {
         new_node->name = node->name;
         new_node->op = node->op;
         new_node->operandNames = node->operandNames;
+        new_node->type = node->type;
         new_node->value = node->value;
         new_module->nodes.push_back(new_node);
         new_module->nodeMap[new_node->name] = new_node;
@@ -290,14 +293,13 @@ int main(int argc, char* argv[]) try {
 #endif
     }
     
-    registerOpHandler(NAME::OP::constant, [](const IrNode* n) -> std::string {
-        return n->name + " = s32[] constant(" + std::to_string(n->value) + ")";
+    registerOpHandler(NAME::OP::constant, [](const IrNode* n) {
+        return n->name + " = " + n->type + " constant(" + n->value + ")";
     });
 
-    registerOpHandler(NAME::OP::add, [](const IrNode* n) -> std::string {
-        return n->name + " = s32[] add(" + n->operandNames[0] + ", " + n->operandNames[1] + ")";
+    registerOpHandler(NAME::OP::add, [](const IrNode* n) {
+        return n->name + " = " + n->type + " add(" + n->operandNames[0] + ", " + n->operandNames[1] + ")";
     });
-
 
     // Parse the input IR module.
     IrModule* module = parseIR(input_file_path);
