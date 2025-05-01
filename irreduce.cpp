@@ -43,7 +43,6 @@ std::string to_string(IrModule* module) {
         }
     }
 
-    // Simple default ROOT: bundle all nodes into a tuple.
     result << "  ROOT root = (";
     for (size_t i = 0; i < module->nodes.size(); ++i) {
         result << "s32[] " << module->nodes[i]->name;
