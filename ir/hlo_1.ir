@@ -1,4 +1,4 @@
-HloModule toy_example
+HloModule example_1
 
 ENTRY main {
   x = s32[] constant(0)
