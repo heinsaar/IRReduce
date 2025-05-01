@@ -25,6 +25,13 @@ struct IrModule {
     std::map<std::string, IrNode*> nodeMap;
 };
 
+using OpHandler = std::function<std::string(const IrNode*)>;
+
+std::map<std::string, OpHandler>& getOpRegistry() {
+    static std::map<std::string, OpHandler> registry;
+    return registry;
+}
+
 // Converts an IR module to a string representation (HLO style).
 std::string to_string(IrModule* module) {
     std::stringstream result;
@@ -33,13 +40,11 @@ std::string to_string(IrModule* module) {
     result << "ENTRY main {\n";
 
     for (auto node : module->nodes) {
-        if (node->op == "Constant") {
-            result << "  " << node->name
-                   << " = s32[] constant(" << node->value << ")\n";
-        } else if (node->op == "Add") {
-            result << "  " << node->name
-                   << " = s32[] add(" << node->operandNames[0]
-                   << ", " << node->operandNames[1] << ")\n";
+        auto& registry = getOpRegistry();
+        if (auto it = registry.find(node->op); it != registry.end()) {
+            result << "  " << it->second(node) << "\n";
+        } else {
+            zen::log(zen::color::yellow("Unknown op type in printer:"), zen::quote(node->op));
         }
     }
 
@@ -55,15 +60,17 @@ std::string to_string(IrModule* module) {
         if (i + 1 < module->nodes.size())
             result << ", ";
     }
-    result << ")\n";
-
-    result << "}\n";
+    result << ")\n}\n";
 
     return result.str();
 }
 
 std::string to_string(IrNode* node) {
     return zen::to_string("Node:", node->name, node->op, node->operandNames);
+}
+
+void registerOpHandler(const std::string& op, OpHandler handler) {
+    getOpRegistry()[op] = handler;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -277,6 +284,15 @@ int main(int argc, char* argv[]) try {
             "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
 #endif
     }
+
+    registerOpHandler("Constant", [](const IrNode* n) -> std::string {
+        return n->name + " = s32[] constant(" + std::to_string(n->value) + ")";
+    });
+
+    registerOpHandler("Add", [](const IrNode* n) -> std::string {
+        return n->name + " = s32[] add(" + n->operandNames[0] + ", " + n->operandNames[1] + ")";
+    });
+
 
     // Parse the input IR module.
     IrModule* module = parseIR(input_file_path);
