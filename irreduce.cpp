@@ -317,7 +317,9 @@ int main(int argc, char* argv[]) try {
     // Apply all passes if none are explicitly specified.
     bool apply_all_passes = !has_explicit_passes;
 
-    zen::log("Applying passes:", apply_all_passes ? "all" : "those specified explicitly.");
+    zen::log("----------------------------");
+    zen::log("Preparing reduction with the following configuration:");
+    zen::log("Passes:", apply_all_passes ? "all" : "those specified explicitly.");
 
     // Register transformation passes based on the input flags.
     if (apply_all_passes || pass_noncriticals)
@@ -348,10 +350,14 @@ int main(int argc, char* argv[]) try {
             return (ret == 0);
         });
     } else {
-        zen::log("Applying invariants: default (no invariant script file specified, using default invariants for debugging).");
+        zen::log("Invariants: default (no invariant script file specified, using default invariants for debugging).");
         // Register invariants.
         registerInvariant(invariantAddPresent);
     }
+
+    zen::log("----------------------------");
+    zen::log("Starting reduction passes...");
+    zen::log("----------------------------");
 
     // Run registered passes iteratively until no changes occur.
     int pass_count = 0;
@@ -385,6 +391,10 @@ int main(int argc, char* argv[]) try {
             }
         }
     } while (pass_applied);
+
+    zen::log("----------------------------");
+    zen::log("Reduction passes ended.");
+    zen::log("----------------------------");
     
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(module);
