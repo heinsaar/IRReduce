@@ -29,7 +29,7 @@ fi
 
 # Build
 if cmake --build . --config $BUILD_TYPE; then
-    ./IRReduce --input_file ../ir/hlo_1.ir --pass_inlineintermediates
+    ./IRReduce --input_file ../ir/hlo_1.ir
 else
   echo "Build failed. Exiting."
   exit 1

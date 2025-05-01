@@ -35,4 +35,4 @@ if ERRORLEVEL 1 (
 )
 
 :: Run
-.\IRReduce.exe --input_file ..\ir\hlo_1.ir --pass_inlineintermediates
+.\IRReduce.exe --input_file ..\ir\hlo_1.ir
