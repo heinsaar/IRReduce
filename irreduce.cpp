@@ -14,9 +14,9 @@
 // IR Node representing a single operation.
 struct IrNode {
     std::string name;
-    std::string op;                        // Operation type: "Constant" or "Add"
-    std::vector<std::string> operandNames; // For "Add", stores operand names
-    int value;                             // Used if op == "Constant"
+    std::string op;                        // Operation type: "constant" or "add"
+    std::vector<std::string> operandNames; // For "add", stores operand names
+    int value;                             // Used if op == "constant"
 };
 
 // IR Module containing a list of nodes and a lookup table.
@@ -112,7 +112,7 @@ IrModule* parseIR(const std::string& filename)
             //   m[1] = name     m[2] = value
             IrNode* n = new IrNode();
             n->name = m[1].str();
-            n->op = "Constant";
+            n->op = "constant";
             n->value = std::stoi(m[2].str());
             module->nodes.push_back(n);
             module->nodeMap[n->name] = n;
@@ -122,7 +122,7 @@ IrModule* parseIR(const std::string& filename)
             //   m[1] = name   m[2] = lhs   m[3] = rhs
             IrNode* n = new IrNode();
             n->name = m[1].str();
-            n->op = "Add";
+            n->op = "add";
             n->operandNames = { m[2].str(), m[3].str() };
             module->nodes.push_back(n);
             module->nodeMap[n->name] = n;
@@ -136,10 +136,10 @@ IrModule* parseIR(const std::string& filename)
 }
 
 // Primary invariant: the IR invariant holds if the module contains
-// at least one "Add" node whose operands are defined.
+// at least one "add" node whose operands are defined.
 bool invariantAddPresent(IrModule* module) {
     for (auto node : module->nodes) {
-        if (node->op == "Add") {
+        if (node->op == "add") {
             if (module->nodeMap.contains(node->operandNames[0]) &&
                 module->nodeMap.contains(node->operandNames[1]))
                 return true;
@@ -199,12 +199,12 @@ void registerInvariant(Invariant inv) {
     getInvariantRegistry().push_back(inv);
 }
 
-// A reduction pass that attempts to remove a non-critical node ("Constant").
+// A reduction pass that attempts to remove a non-critical node ("constant").
 // Returns true if a node was successfully removed.
 bool passRemoveNoncriticals(IrModule* module) {
     for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
-        if (node->op != "Add") {
+        if (node->op != "add") {
             // Temporarily remove the node.
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
@@ -221,9 +221,9 @@ bool passRemoveNoncriticals(IrModule* module) {
 bool passRemoveUnusedConstants(IrModule* module) {
     bool removed = false;
     std::set<std::string> used_names;
-    // Collect all operand names from "Add" nodes.
+    // Collect all operand names from "add" nodes.
     for (auto node : module->nodes) {
-        if (node->op == "Add") {
+        if (node->op == "add") {
             for (const std::string& operand : node->operandNames) {
                 used_names.insert(operand);
             }
@@ -232,7 +232,7 @@ bool passRemoveUnusedConstants(IrModule* module) {
     // Remove nodes in reverse order to avoid invalidating iterators.
     for (int i = module->nodes.size() - 1; i >= 0; --i) {
         IrNode* node = module->nodes[i];
-        if (node->op == "Constant" && used_names.find(node->name) == used_names.end()) {
+        if (node->op == "constant" && used_names.find(node->name) == used_names.end()) {
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
             zen::log(std::string(zen::color::magenta(__func__)) + ":", "removed node", zen::quote(node->name));
@@ -285,11 +285,11 @@ int main(int argc, char* argv[]) try {
 #endif
     }
 
-    registerOpHandler("Constant", [](const IrNode* n) -> std::string {
+    registerOpHandler("constant", [](const IrNode* n) -> std::string {
         return n->name + " = s32[] constant(" + std::to_string(n->value) + ")";
     });
 
-    registerOpHandler("Add", [](const IrNode* n) -> std::string {
+    registerOpHandler("add", [](const IrNode* n) -> std::string {
         return n->name + " = s32[] add(" + n->operandNames[0] + ", " + n->operandNames[1] + ")";
     });
 
