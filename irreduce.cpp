@@ -11,6 +11,20 @@
 
 #include "kaizen.h"
 
+namespace NAME::ARG {
+    static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
+    static const std::string invariants = "--invariants"; // Path to the external invariants script.
+
+    // Passes
+    static const std::string pass_noncriticals    = "--pass_noncriticals";    // Removes non-critical nodes.
+    static const std::string pass_unusedconstants = "--pass_unusedconstants"; // Removes unused constants.
+};
+
+namespace NAME::OP {
+    static const std::string constant = "constant";
+    static const std::string add      = "add";
+};
+
 // IR Node representing a single operation.
 struct IrNode {
     std::string name;
@@ -112,7 +126,7 @@ IrModule* parseIR(const std::string& filename)
             //   m[1] = name     m[2] = value
             IrNode* n = new IrNode();
             n->name = m[1].str();
-            n->op = "constant";
+            n->op = NAME::OP::constant;
             n->value = std::stoi(m[2].str());
             module->nodes.push_back(n);
             module->nodeMap[n->name] = n;
@@ -122,7 +136,7 @@ IrModule* parseIR(const std::string& filename)
             //   m[1] = name   m[2] = lhs   m[3] = rhs
             IrNode* n = new IrNode();
             n->name = m[1].str();
-            n->op = "add";
+            n->op = NAME::OP::add;
             n->operandNames = { m[2].str(), m[3].str() };
             module->nodes.push_back(n);
             module->nodeMap[n->name] = n;
@@ -139,7 +153,7 @@ IrModule* parseIR(const std::string& filename)
 // at least one "add" node whose operands are defined.
 bool invariantAddPresent(IrModule* module) {
     for (auto node : module->nodes) {
-        if (node->op == "add") {
+        if (node->op == NAME::OP::add) {
             if (module->nodeMap.contains(node->operandNames[0]) &&
                 module->nodeMap.contains(node->operandNames[1]))
                 return true;
@@ -204,7 +218,7 @@ void registerInvariant(Invariant inv) {
 bool passRemoveNoncriticals(IrModule* module) {
     for (int i : zen::in(module->nodes.size())) {
         IrNode* node = module->nodes[i];
-        if (node->op != "add") {
+        if (node->op != NAME::OP::add) {
             // Temporarily remove the node.
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
@@ -223,7 +237,7 @@ bool passRemoveUnusedConstants(IrModule* module) {
     std::set<std::string> used_names;
     // Collect all operand names from "add" nodes.
     for (auto node : module->nodes) {
-        if (node->op == "add") {
+        if (node->op == NAME::OP::add) {
             for (const std::string& operand : node->operandNames) {
                 used_names.insert(operand);
             }
@@ -232,7 +246,7 @@ bool passRemoveUnusedConstants(IrModule* module) {
     // Remove nodes in reverse order to avoid invalidating iterators.
     for (int i = module->nodes.size() - 1; i >= 0; --i) {
         IrNode* node = module->nodes[i];
-        if (node->op == "constant" && used_names.find(node->name) == used_names.end()) {
+        if (node->op == NAME::OP::constant && used_names.find(node->name) == used_names.end()) {
             module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
             zen::log(std::string(zen::color::magenta(__func__)) + ":", "removed node", zen::quote(node->name));
@@ -242,15 +256,6 @@ bool passRemoveUnusedConstants(IrModule* module) {
     }
     return removed;
 }
-
-namespace NAME::ARG {
-    static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
-    static const std::string invariants = "--invariants"; // Path to the external invariants script.
-
-    // Passes
-    static const std::string pass_noncriticals    = "--pass_noncriticals";    // Removes non-critical nodes.
-    static const std::string pass_unusedconstants = "--pass_unusedconstants"; // Removes unused constants.
-};
 
 const char* get_default_input_file_path() {
 #ifdef _WIN32
@@ -284,12 +289,12 @@ int main(int argc, char* argv[]) try {
             "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
 #endif
     }
-
-    registerOpHandler("constant", [](const IrNode* n) -> std::string {
+    
+    registerOpHandler(NAME::OP::constant, [](const IrNode* n) -> std::string {
         return n->name + " = s32[] constant(" + std::to_string(n->value) + ")";
     });
 
-    registerOpHandler("add", [](const IrNode* n) -> std::string {
+    registerOpHandler(NAME::OP::add, [](const IrNode* n) -> std::string {
         return n->name + " = s32[] add(" + n->operandNames[0] + ", " + n->operandNames[1] + ")";
     });
 
