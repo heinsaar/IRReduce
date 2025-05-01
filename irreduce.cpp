@@ -325,9 +325,6 @@ int main(int argc, char* argv[]) try {
 
     if (apply_all_passes || pass_unusedconstants)
         registerPass(passRemoveUnusedConstants);
-    
-    // Register invariants.
-    registerInvariant(invariantAddPresent);
 
     // If the user provides an external invariants script, register its invariant.
     if (args.accept(NAME::ARG::invariants).is_present()) {
@@ -350,6 +347,10 @@ int main(int argc, char* argv[]) try {
             std::remove(tmp_filename);
             return (ret == 0);
         });
+    } else {
+        zen::log("Applying invariants: default (no invariant script file specified, using default invariants for debugging).");
+        // Register invariants.
+        registerInvariant(invariantAddPresent);
     }
 
     // Run registered passes iteratively until no changes occur.
