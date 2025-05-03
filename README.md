@@ -11,6 +11,9 @@ IRReduce is a tool for reducing IRs to a minimal form that preserves user-provid
    ```bash
    cd path/to/your/cloned/dir
    ```
+The repo contains utility scripts `runbuild_win.bat` and `runbuild_linx.sh` that essentially combine the next steps 3 to 6, so at this point you can simply call the corresponding script for your environment and proceed to step 7 and observe the IRReduce in action.
+
+If you want to build step by step, then proceed to the next step.
 
 3. **Create a Build Directory:** It's a good practice to create a separate directory for the build files to keep them isolated from the source files. Inside your project directory, run:
 
@@ -68,28 +71,47 @@ If you want to develop using MSVC compiler from Visual Studio Code, there are va
    ```bash
    .\irreduce.exe <ir_file>
    ```
-   For example, using the toy (demo) IR files in the `ir` directory:
+7. **Observe the reduced IR.** For example, using the (XLA HLO-like) IR files in the `ir` directory:
    ```bash
-   ./irreduce ../ir/ir_1.txt --pass_unusedconstants
+   ./irreduce ../ir/hlo_1.txt --pass_unusedconstants
    ```
    Will produce an output like the following:
    ```
    Original Module:
-
-   Constant x = 0
-   Constant a = 5
-   Constant b = 3
-   Constant c = 7
-   Add d = a + b
-   Add e = d + c
    
-   Applying passes: those specified explicitly.
+   HloModule <module name>
+   
+   ENTRY main {
+     x = s32[] constant(0)
+     a = s32[] constant(5)
+     b = s32[] constant(3)
+     c = s32[] constant(7)
+     d = s32[] add(a, b)
+     e = s32[] add(d, c)
+     ROOT root = (s32[] x, s32[] a, s32[] b, s32[] c, s32[] d, s32[] e) tuple(x, a, b, c, d, e)
+   }
+   
+   ----------------------------
+   Preparing reduction with the following configuration:
+   Passes: those specified explicitly.
+   Invariants: default (no invariant script file specified, using default invariants for debugging).
+   ----------------------------
+   Starting reduction passes...
+   ----------------------------
    passRemoveUnusedConstants: removed node "x"
+   ----------------------------
+   Reduction passes ended.
+   ----------------------------
    Final module after 1 reductions:
    
-   Constant a = 5
-   Constant b = 3
-   Constant c = 7
-   Add d = a + b
-   Add e = d + c
+   HloModule <module name>
+   
+   ENTRY main {
+     a = s32[] constant(5)
+     b = s32[] constant(3)
+     c = s32[] constant(7)
+     d = s32[] add(a, b)
+     e = s32[] add(d, c)
+     ROOT root = (s32[] a, s32[] b, s32[] c, s32[] d, s32[] e) tuple(a, b, c, d, e)
+   }
    ```
