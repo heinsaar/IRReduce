@@ -275,6 +275,7 @@ const char* get_default_input_file_path() {
 int main(int argc, char* argv[]) try {
     // Parse the command line arguments.
     zen::cmd_args args(argv, argc);
+    zen::log("Running IRReduce with command: ", args.original_command());
 
     std::string input_file_path;
     
