@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <memory>
 
 #include "kaizen.h"
 
@@ -35,7 +36,7 @@ struct IrNode {
 
 // IR Module containing a list of nodes and a lookup table.
 struct IrModule {
-    std::vector<IrNode*> nodes;
+    std::vector<std::unique_ptr<IrNode>> nodes;
     std::map<std::string, IrNode*> nodeMap;
 };
 
@@ -52,30 +53,29 @@ std::string to_string(IrModule* module) {
 
     result << "HloModule todo_replace_me_with_original_name\n\n";
     result << "ENTRY main {\n";
-
-    for (auto node : module->nodes) {
+    for (const auto& nodePtr : module->nodes) {
+        const IrNode* node = nodePtr.get();
         auto& registry = getOpRegistry();
         if (auto it = registry.find(node->op); it != registry.end()) {
             result << "  " << it->second(node) << "\n";
         } else {
-            zen::log(zen::color::yellow("Unknown op type in printer:"), zen::quote(node->op));
+            zen::log(zen::color::yellow("Unknown op type in printer:"),
+                     zen::quote(node->op));
         }
     }
 
     result << "  ROOT root = (";
-    for (size_t i = 0; i < module->nodes.size(); ++i) {
-        result << module->nodes[i]->type << ' ' << module->nodes[i]->name;
+    for (std::size_t i = 0; i < module->nodes.size(); ++i) {
+        const auto& n = module->nodes[i];
+        result << n->type << ' ' << n->name;
         if (i + 1 < module->nodes.size()) result << ", ";
     }
-
     result << ") tuple(";
-    for (size_t i = 0; i < module->nodes.size(); ++i) {
+    for (std::size_t i = 0; i < module->nodes.size(); ++i) {
         result << module->nodes[i]->name;
-        if (i + 1 < module->nodes.size())
-            result << ", ";
+        if (i + 1 < module->nodes.size()) result << ", ";
     }
     result << ")\n}\n";
-
     return result.str();
 }
 
@@ -103,7 +103,7 @@ IrModule* parseIR(const std::string& filename)
     if (!ir_file)
         throw std::runtime_error("Unable to open " + filename);
 
-    IrModule* module = new IrModule();
+    auto* module = new IrModule();
 
     // <name> = <type> constant(<payload>)
     const std::regex re_const(R"(^\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z0-9_\[\],]+)\s*constant\(\s*([^)]+)\s*\)\s*$)");
@@ -125,36 +125,41 @@ IrModule* parseIR(const std::string& filename)
 
         std::smatch m;
         if (std::regex_match(line, m, re_const)) {
-            auto* n = new IrNode{};
-            n->name = m[1];
-            n->type = m[2];
-            n->op = NAME::OP::constant;
+            auto n = std::make_unique<IrNode>();
+            n->name  = m[1];
+            n->type  = m[2];
+            n->op    = NAME::OP::constant;
             n->value = m[3];
-            module->nodes.push_back(n);
-            module->nodeMap[n->name] = n;
+
+            module->nodeMap[n->name] = n.get();          // raw ptr for lookup
+            module->nodes.push_back(std::move(n));       // transfer ownership
             continue;
         }
         if (std::regex_match(line, m, re_add)) {
-            auto* n = new IrNode{};
-            n->name = m[1];
-            n->type = m[2];
-            n->op = NAME::OP::add;
+            auto n = std::make_unique<IrNode>();
+            n->name         = m[1];
+            n->type         = m[2];
+            n->op           = NAME::OP::add;
             n->operandNames = { m[3], m[4] };
-            module->nodes.push_back(n);
-            module->nodeMap[n->name] = n;
+
+            module->nodeMap[n->name] = n.get();
+            module->nodes.push_back(std::move(n));
             continue;
         }
 
         // Non-empty but still unrecognised: warn, keep going
-        zen::log(zen::color::yellow("HLO parser: ignored unsupported or unfamiliar line:"), zen::quote(line));
+        zen::log(zen::color::yellow("HLO parser: ignored unsupported or unfamiliar line:"),
+                 zen::quote(line));
     }
     return module;
 }
 
 // Primary invariant: the IR invariant holds if the module contains
 // at least one "add" node whose operands are defined.
-bool invariantAddPresent(IrModule* module) {
-    for (auto node : module->nodes) {
+bool invariantAddPresent(IrModule* module)
+{
+    for (const auto& nodePtr : module->nodes) {
+        const IrNode* node = nodePtr.get();
         if (node->op == NAME::OP::add) {
             if (module->nodeMap.contains(node->operandNames[0]) &&
                 module->nodeMap.contains(node->operandNames[1]))
@@ -164,30 +169,18 @@ bool invariantAddPresent(IrModule* module) {
     return false;
 }
 
+
 // Helper function: creates a deep copy of the module.
-IrModule* cloneModule(IrModule* module) {
-    IrModule* new_module = new IrModule();
-    for (auto node : module->nodes) {
-        IrNode* new_node = new IrNode();
-        new_node->name = node->name;
-        new_node->op = node->op;
-        new_node->operandNames = node->operandNames;
-        new_node->type = node->type;
-        new_node->value = node->value;
-        new_module->nodes.push_back(new_node);
-        new_module->nodeMap[new_node->name] = new_node;
+IrModule* cloneModule(IrModule* module)
+{
+    auto* new_module = new IrModule();
+    for (const auto& nodePtr : module->nodes) {
+        auto new_node = std::make_unique<IrNode>(*nodePtr); // struct copy
+        new_module->nodeMap[new_node->name] = new_node.get();
+        new_module->nodes.push_back(std::move(new_node));
     }
     return new_module;
 }
-
-// Helper function: deallocates the module.
-void freeModule(IrModule* module) {
-    for (auto node : module->nodes) {
-        delete node;
-    }
-    delete module;
-}
-
 // Type alias for a transformation pass function.
 using Pass = std::function<bool(IrModule*)>;
 
@@ -218,19 +211,20 @@ void registerInvariant(Invariant inv) {
 
 // A reduction pass that attempts to remove a non-critical node ("constant").
 // Returns true if a node was successfully removed.
-bool passRemoveNoncriticals(IrModule* module) {
+bool passRemoveNoncriticals(IrModule* module)
+{
     for (int i : zen::in(module->nodes.size())) {
-        IrNode* node = module->nodes[i];
+        IrNode* node = module->nodes[i].get();         
         if (node->op != NAME::OP::add) {
-            // Temporarily remove the node.
-            module->nodes.erase(module->nodes.begin() + i);
             module->nodeMap.erase(node->name);
-            zen::log(std::string(zen::color::magenta(__func__)) + ":", "removed node", zen::quote(node->name));
-            delete node;
+            module->nodes.erase(module->nodes.begin() + i); 
+            zen::log(std::string(zen::color::magenta(__func__)) + ":",
+                     "removed node", zen::quote(node->name));
             return true;
         }
     }
-    zen::log(std::string(zen::color::magenta(__func__)) + ":", "no further reduction possible.");
+    zen::log(std::string(zen::color::magenta(__func__)) + ":",
+             "no further reduction possible.");
     return false;
 }
 
@@ -383,16 +377,16 @@ int main(int argc, char* argv[]) try {
                 }
                 if (!invariant_ok) {
                     zen::log(zen::color::yellow("An invariant failed after the most recent pass; reverting it..."));
-                    freeModule(module);
+                    delete module;
                     module = backup; // Restore from backup.
                 } else {
                     // The pass is valid.
                     pass_applied = true;
                     pass_count++;
-                    freeModule(backup);
+                    delete backup;
                 }
             } else {
-                freeModule(backup);
+                delete backup; 
             }
         }
     } while (pass_applied);
@@ -404,9 +398,8 @@ int main(int argc, char* argv[]) try {
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(module);
     
-    // Cleanup: deallocate memory. This will be rewritten later
-    // with proper resource management after this POC phase.
-    freeModule(module);
+    // Cleanup: deallocate memory. 
+    delete module;
 } catch (const std::exception& e) {
     zen::log(zen::color::red("ERROR:"), e.what());
     return 1;
