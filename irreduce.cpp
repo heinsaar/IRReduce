@@ -8,12 +8,24 @@
 #include <string>
 #include <map>
 #include <set>
+#include <regex>
+
+#if __cplusplus >= 201703L
+  #include <filesystem>
+#else
+  #ifdef _WIN32
+    #include <direct.h>   // _mkdir
+  #else
+    #include <sys/stat.h> // mkdir
+  #endif
+#endif
 
 #include "kaizen.h"
 
 namespace NAME::ARG {
     static const std::string input_file = "--input_file"; // Path to the input file containing the IR module.
     static const std::string invariants = "--invariants"; // Path to the external invariants script.
+    static const std::string output_file = "--output_ir_file";
 
     // Passes
     static const std::string pass_noncriticals    = "--pass_noncriticals";    // Removes non-critical nodes.
@@ -268,35 +280,96 @@ const char* get_default_input_file_path() {
 #endif
 }
 
+// Helper function: creates the output directory if it doesn't exist.
+// This is a crude implementation that works on both Windows and POSIX systems.
+static void ensure_dir_for(const std::string& file_path)
+{
+#if __cplusplus >= 201703L
+    std::filesystem::create_directories(std::filesystem::path(file_path).parent_path());
+#else
+    // crude but portable: create “output” if that’s the prefix
+    size_t pos = file_path.find_last_of("/\\");
+    if (pos != std::string::npos) {
+        std::string dir = file_path.substr(0, pos);
+#ifdef _WIN32
+        _mkdir(dir.c_str());
+#else
+        mkdir(dir.c_str(), 0755);
+#endif
+    }
+#endif
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[]) try {
-    // Parse the command line arguments.
-    zen::cmd_args args(argv, argc);
+    //──────────────── split --key=value into "--key" "value" for Zen ─────────────
+    std::vector<char*> expanded;
+    expanded.push_back(argv[0]);                    // program name stays the same
+
+    std::vector<std::string> storage;               // owns duplicated strings
+    for (int i = 1; i < argc; ++i) {
+        std::string_view a = argv[i];
+        auto pos = a.find('=');
+        if (pos != std::string_view::npos && a.rfind("--", 0) == 0) {
+            storage.emplace_back(a.substr(0, pos));     // "--key"
+            storage.emplace_back(a.substr(pos + 1));    // "value"
+            expanded.push_back(storage[storage.size() - 2].data());
+            expanded.push_back(storage.back().data());
+        } else {
+            expanded.push_back(argv[i]);
+        }
+    }
+
+    zen::cmd_args args(expanded.data(), static_cast<int>(expanded.size()));
+    //──────────────────────────────────────────────────────────────────────────────
     zen::log("Running IRReduce with command: ", args.original_command());
 
     std::string input_file_path;
-    
+
     if (args.accept(NAME::ARG::input_file).is_present()) {
         auto input_options = args.get_options(NAME::ARG::input_file);
         if (input_options.empty()) {
             throw std::runtime_error("No input file specified for argument: " + NAME::ARG::input_file);
         }
         input_file_path = input_options[0];
-    } else if (argc > 1) {
-        // Assume first positional argument (after program name) is the input file
-        input_file_path = args.arg_at(1);
     } else {
-#ifndef NDEBUG
-        input_file_path = get_default_input_file_path(); // no input file specified, use default for debugging
+    #ifndef NDEBUG
+        input_file_path = get_default_input_file_path();
         zen::log("No input file specified, using default for debugging:", zen::color::yellow(zen::quote(input_file_path)));
-#else
-        throw std::invalid_argument("Missing required argument(s): input file path. Specify it implicitly "
-            "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
-#endif
+    #else
+        throw std::invalid_argument("Missing required argument: --input_file=<path>");
+    #endif
     }
+
+    /* ------------------------------------------------------------------------
+    Output-file handling  (–‐output_ir_file)
+    ------------------------------------------------------------------------ */
+    std::string output_file_path;
+
+    if (args.accept(NAME::ARG::output_file).is_present()) {
+        // the flag was given
+        auto out_opts = args.get_options(NAME::ARG::output_file);
+        if (out_opts.empty())
+            throw std::runtime_error("Flag given with no path: " + NAME::ARG::output_file);
+        output_file_path = out_opts[0];
+    } else {
+        // derive default: ./output/<basename>.ir
+        zen::string base = input_file_path;
+        size_t slash = base.find_last_of("/\\");
+        if (slash != zen::string::npos)
+            base = base.substr(slash + 1); 
+        size_t dot = base.rfind('.');
+        if (dot != zen::string::npos) 
+            base = base.substr(0, dot);                         // drop extension
+        output_file_path = "output/" + base + ".ir";
+    }
+
+    zen::log("Output IR file will be:", zen::quote(output_file_path));
+
     
     registerOpHandler(NAME::OP::constant, [](const IrNode* n) {
         return n->name + " = " + n->type + " constant(" + n->value + ")";
@@ -335,6 +408,23 @@ int main(int argc, char* argv[]) try {
 
     // If the user provides an external invariants script, register its invariant.
     if (args.accept(NAME::ARG::invariants).is_present()) {
+        // Manually split --key=value arguments for Zen compatibility
+        zen::vector<zen::string> rewritten;
+        for (int i = 1; i < argc; ++i) {
+            zen::string arg = argv[i];
+            auto pos = arg.find('=');
+            if (pos != zen::string::npos) {
+                zen::string key = arg.substr(0, pos);
+                zen::string val = arg.substr(pos + 1);
+                rewritten.push_back(key);
+                rewritten.push_back(val);
+            } else {
+                rewritten.push_back(arg);
+            }
+        }
+
+        zen::cmd_args args((char**)rewritten.data(), (int)rewritten.size());
+
         auto invariants_script = args.get_options(NAME::ARG::invariants)[0];
         zen::log("Using external invariants script:", zen::quote(invariants_script));
         registerInvariant([invariants_script](IrModule* module) -> bool {
@@ -401,9 +491,20 @@ int main(int argc, char* argv[]) try {
     zen::log("Reduction passes ended.");
     zen::log("----------------------------");
     
+    std::string final_ir = to_string(module);
+
     zen::log("Final module after", pass_count, "reductions:\n");
-    zen::log(module);
-    
+    zen::log(final_ir);                 // still print
+
+    ensure_dir_for(output_file_path);
+    std::ofstream out_ir(output_file_path);
+    if (!out_ir)
+        zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(output_file_path), " for writing.");
+    else{ 
+        out_ir << final_ir << std::endl,
+        zen::log("Wrote reduced IR to:", zen::quote(output_file_path));
+    }
+        
     // Cleanup: deallocate memory. This will be rewritten later
     // with proper resource management after this POC phase.
     freeModule(module);
