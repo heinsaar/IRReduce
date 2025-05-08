@@ -41,11 +41,17 @@ jobs:
 
     - name: Run Executable
       working-directory: build
-      # Platform-specific binary name and path.
+      shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]]; then
-          ./Release/IRReduce.exe ../ir/hlo_1.ir --pass_unusedconstants
+          ./Release/IRReduce.exe ^
+            --input_file ..\ir\hlo_1.ir ^
+            --output_ir_file ..\output\hlo_1.ir ^
+            --pass_unusedconstants
         else
-          ./IRReduce ../ir/hlo_1.ir --pass_unusedconstants
+          ./IRReduce \
+            --input_file ../ir/hlo_1.ir \
+            --output_ir_file output/hlo_1.ir \
+            --pass_unusedconstants
         fi
-      shell: bash
+
