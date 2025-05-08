@@ -1,36 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-# Initialize variables
-BUILD_TYPE="Debug"  # Default
+# ── defaults ──────────────────────────────────
+BUILD_TYPE="Debug"
+IR_FILE="../ir/hlo_1.ir"
+EXTRA_ARGS=()
 
-# Parse named arguments
+# ── parse args ────────────────────────────────
 for arg in "$@"; do
-  case $arg in
-    -debug)
-      BUILD_TYPE="Debug"
-      ;;
-    -release)
-      BUILD_TYPE="Release"
-      ;;
+  case "$arg" in
+    -debug)   BUILD_TYPE="Debug"   ;;
+    -release) BUILD_TYPE="Release" ;;
     *)
-      # Ignore unknown args
+      if [[ -z "$IR_SPECIFIED" ]]; then
+        IR_FILE="$arg"
+        IR_SPECIFIED=1
+      else
+        EXTRA_ARGS+=("$arg")
+      fi
       ;;
   esac
 done
 
-# Create build directory if needed
+echo "Building with configuration: $BUILD_TYPE"
+echo "IR file: $IR_FILE"
+
+# ── configure & build ─────────────────────────
 mkdir -p build
 cd build
 
-# Configure only if first time (optional optimization)
-if [ ! -f Makefile ]; then
-  cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
+if [[ ! -f Makefile ]]; then
+  cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
 fi
+cmake --build . --config "$BUILD_TYPE"
 
-# Build
-if cmake --build . --config $BUILD_TYPE; then
-    ./IRReduce --input_file ../ir/hlo_1.ir
-else
-  echo "Build failed. Exiting."
-  exit 1
-fi
+# ── run ───────────────────────────────────────
+./IRReduce --input_file "$IR_FILE" "${EXTRA_ARGS[@]}"
