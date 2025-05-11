@@ -280,13 +280,6 @@ const char* get_default_input_file_path() {
 #endif
 }
 
-// Helper function: creates the output directory if it doesn't exist.
-// This is a crude implementation that works on both Windows and POSIX systems.
-static void ensure_dir_for(const std::string& file_path)
-{
-    std::filesystem::create_directories(std::filesystem::path(file_path).parent_path());
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,7 +475,7 @@ int main(int argc, char* argv[]) try {
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(final_ir);                 // still print
 
-    ensure_dir_for(output_file_path);
+    std::filesystem::create_directories(std::filesystem::path(output_file_path).parent_path());
     std::ofstream out_ir(output_file_path);
     if (!out_ir)
         zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(output_file_path), " for writing.");
