@@ -359,23 +359,6 @@ int main(int argc, char* argv[]) try {
 
     // If the user provides an external invariants script, register its invariant.
     if (args.accept(NAME::ARG::invariants).is_present()) {
-        // Manually split --key=value arguments for Zen compatibility
-        zen::vector<zen::string> rewritten;
-        for (int i = 1; i < argc; ++i) {
-            zen::string arg = argv[i];
-            auto pos = arg.find('=');
-            if (pos != zen::string::npos) {
-                zen::string key = arg.substr(0, pos);
-                zen::string val = arg.substr(pos + 1);
-                rewritten.push_back(key);
-                rewritten.push_back(val);
-            } else {
-                rewritten.push_back(arg);
-            }
-        }
-
-        zen::cmd_args args((char**)rewritten.data(), (int)rewritten.size());
-
         auto invariants_script = args.get_options(NAME::ARG::invariants)[0];
         zen::log("Using external invariants script:", zen::quote(invariants_script));
         registerInvariant([invariants_script](IrModule* module) -> bool {
