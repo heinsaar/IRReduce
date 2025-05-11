@@ -298,9 +298,6 @@ int main(int argc, char* argv[]) try {
     #endif
     }
 
-    /* ------------------------------------------------------------------------
-    Output-file handling  (–‐output_ir_file)
-    ------------------------------------------------------------------------ */
     std::string output_file_path;
 
     if (args.accept(NAME::ARG::output_file).is_present()) {
