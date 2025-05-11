@@ -307,7 +307,7 @@ int main(int argc, char* argv[]) try {
         // the flag was given
         auto out_opts = args.get_options(NAME::ARG::output_file);
         if (out_opts.empty())
-            throw std::runtime_error("Flag given with no path: " + NAME::ARG::output_file);
+            throw std::runtime_error(zen::quote(NAME::ARG::output_file) + " flag given with no path.");
         output_file_path = out_opts[0];
     } else {
         // derive default: ./output/<basename>.ir
