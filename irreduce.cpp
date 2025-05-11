@@ -304,21 +304,14 @@ int main(int argc, char* argv[]) try {
     std::string output_file_path;
 
     if (args.accept(NAME::ARG::output_file).is_present()) {
-        // the flag was given
         auto out_opts = args.get_options(NAME::ARG::output_file);
         if (out_opts.empty())
             throw std::runtime_error(zen::quote(NAME::ARG::output_file) + " flag given with no path.");
         output_file_path = out_opts[0];
-    } else {
-        // derive default: ./output/<basename>.ir
-        zen::string base = input_file_path;
-        size_t slash = base.find_last_of("/\\");
-        if (slash != zen::string::npos)
-            base = base.substr(slash + 1); 
-        size_t dot = base.rfind('.');
-        if (dot != zen::string::npos) 
-            base = base.substr(0, dot);                         // drop extension
-        output_file_path = "output/" + base + ".ir";
+    } else { // no output IR file provided, fall back to default: ./output/<basename>.ir
+        zen::fs::path input_path = input_file_path;
+        zen::fs::path base = input_path.stem(); // remove extension
+        output_file_path = (zen::fs::path("output") / (base.string() + ".ir")).string();
     }
 
     zen::log("Output IR file will be:", zen::quote(output_file_path));
