@@ -1,4 +1,5 @@
 ﻿#include <functional>
+#include <filesystem>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
@@ -9,16 +10,6 @@
 #include <map>
 #include <set>
 #include <regex>
-
-#if __cplusplus >= 201703L
-  #include <filesystem>
-#else
-  #ifdef _WIN32
-    #include <direct.h>   // _mkdir
-  #else
-    #include <sys/stat.h> // mkdir
-  #endif
-#endif
 
 #include "kaizen.h"
 
