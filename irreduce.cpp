@@ -454,7 +454,7 @@ int main(int argc, char* argv[]) try {
         zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(output_file_path), " for writing.");
     else{ 
         out_ir << final_ir << std::endl,
-        zen::log("Wrote reduced IR to:", zen::quote(output_file_path));
+        zen::log("Reduced IR also written to:", zen::quote(output_file_path));
     }
         
     // Cleanup: deallocate memory. This will be rewritten later
