@@ -276,26 +276,7 @@ const char* get_default_input_file_path() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[]) try {
-    //──────────────── split --key=value into "--key" "value" for Zen ─────────────
-    std::vector<char*> expanded;
-    expanded.push_back(argv[0]);                    // program name stays the same
-
-    std::vector<std::string> storage;               // owns duplicated strings
-    for (int i = 1; i < argc; ++i) {
-        std::string_view a = argv[i];
-        auto pos = a.find('=');
-        if (pos != std::string_view::npos && a.rfind("--", 0) == 0) {
-            storage.emplace_back(a.substr(0, pos));     // "--key"
-            storage.emplace_back(a.substr(pos + 1));    // "value"
-            expanded.push_back(storage[storage.size() - 2].data());
-            expanded.push_back(storage.back().data());
-        } else {
-            expanded.push_back(argv[i]);
-        }
-    }
-
-    zen::cmd_args args(expanded.data(), static_cast<int>(expanded.size()));
-    //──────────────────────────────────────────────────────────────────────────────
+    zen::cmd_args args(argv, argc);
     zen::log("Running IRReduce with command: ", args.original_command());
 
     std::string input_file_path;
