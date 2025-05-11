@@ -284,22 +284,8 @@ const char* get_default_input_file_path() {
 // This is a crude implementation that works on both Windows and POSIX systems.
 static void ensure_dir_for(const std::string& file_path)
 {
-#if __cplusplus >= 201703L
     std::filesystem::create_directories(std::filesystem::path(file_path).parent_path());
-#else
-    // crude but portable: create “output” if that’s the prefix
-    size_t pos = file_path.find_last_of("/\\");
-    if (pos != std::string::npos) {
-        std::string dir = file_path.substr(0, pos);
-#ifdef _WIN32
-        _mkdir(dir.c_str());
-#else
-        mkdir(dir.c_str(), 0755);
-#endif
-    }
-#endif
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
