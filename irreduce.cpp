@@ -322,7 +322,6 @@ int main(int argc, char* argv[]) try {
 
     zen::log("Output IR file will be:", zen::quote(output_file_path));
 
-    
     registerOpHandler(NAME::OP::constant, [](const IrNode* n) {
         return n->name + " = " + n->type + " constant(" + n->value + ")";
     });
