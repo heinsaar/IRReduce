@@ -430,6 +430,7 @@ int main(int argc, char* argv[]) try {
     zen::log("Final module after", pass_count, "reductions:\n");
     zen::log(final_ir);
 
+    // Write the final IR to the output file.
     std::filesystem::create_directories(std::filesystem::path(output_file_path).parent_path());
     std::ofstream out_ir(output_file_path);
     if (!out_ir)
