@@ -14,6 +14,7 @@
 #include "kaizen.h"
 
 namespace NAME::ARG {
+    // Various
     static const std::string input_file  = "--input_file"; // Path to the input file containing the IR module.
     static const std::string invariants  = "--invariants"; // Path to the external invariants script.
     static const std::string output_file = "--output_ir_file";
