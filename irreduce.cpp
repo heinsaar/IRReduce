@@ -292,7 +292,8 @@ int main(int argc, char* argv[]) try {
         input_file_path = get_default_input_file_path(); // no input file specified, use default for debugging
         zen::log("No input file specified, using default for debugging:", zen::color::yellow(zen::quote(input_file_path)));
     #else
-        throw std::invalid_argument("Missing required argument: --input_file=<path>");
+        throw std::invalid_argument("Missing required argument(s): input file path. Specify it implicitly "
+            "by providing it as the only argument, or explicitly with: " + NAME::ARG::input_file + " <path>");
     #endif
     }
 
