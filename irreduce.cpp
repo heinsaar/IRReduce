@@ -446,7 +446,7 @@ int main(int argc, char* argv[]) try {
     std::string final_ir = to_string(module);
 
     zen::log("Final module after", pass_count, "reductions:\n");
-    zen::log(final_ir);                 // still print
+    zen::log(final_ir);
 
     std::filesystem::create_directories(std::filesystem::path(output_file_path).parent_path());
     std::ofstream out_ir(output_file_path);
