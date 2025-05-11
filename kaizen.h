@@ -312,6 +312,8 @@ namespace color {
 
 ///////////////////////////////////////////////////////////////////////////////////////////// FILESYSTEM
 
+namespace fs = std::filesystem;
+
 std::filesystem::path current_path() { return std::filesystem::current_path(); }
 std::filesystem::path  parent_path() { return std::filesystem::current_path().parent_path(); }
 
