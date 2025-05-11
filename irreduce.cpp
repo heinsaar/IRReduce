@@ -425,7 +425,10 @@ int main(int argc, char* argv[]) try {
     zen::log(final_ir);
 
     // Write the final IR to the output file.
-    std::filesystem::create_directories(std::filesystem::path(output_file_path).parent_path());
+    auto parent = std::filesystem::path(output_file_path).parent_path();
+    if (!parent.empty())
+        std::filesystem::create_directories(parent);
+
     std::ofstream out_ir(output_file_path);
     if (!out_ir)
         zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(output_file_path), " for writing.");
