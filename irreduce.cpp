@@ -264,6 +264,15 @@ bool passRemoveUnusedConstants(IrModule* module) {
     return removed;
 }
 
+std::string rootdir_from_exe()
+{
+#ifdef _WIN32
+    return "../../..";
+#else
+    return "..";
+#endif
+}
+
 const char* get_default_input_file_path() {
 #ifdef _WIN32
     return "../../../ir/hlo_1.ir";
