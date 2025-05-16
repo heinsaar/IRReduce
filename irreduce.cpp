@@ -273,12 +273,8 @@ std::string rootdir_from_exe()
 #endif
 }
 
-const char* get_default_input_file_path() {
-#ifdef _WIN32
-    return "../../../ir/hlo_1.ir";
-#else
-    return "../ir/hlo_1.ir";
-#endif
+std::string get_default_input_file_path() {
+    return rootdir_from_exe() + "/ir/hlo_1.ir";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
