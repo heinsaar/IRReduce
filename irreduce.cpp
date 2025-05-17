@@ -266,8 +266,12 @@ bool passRemoveUnusedConstants(IrModule* module) {
 
 std::string rootdir_from_exe()
 {
+// Identical for now since we'll launch with runbuild_win.bat or runbuild_unix.sh scripts.
+// The other option is Ctrl + F5 from Visual Studio, but that will launch the exe from something
+// like /out/build/x64-debug, for which the rootdir from the exe path is different.
+// We'll deal with this later.
 #ifdef _WIN32
-    return "../../..";
+    return "..";
 #else
     return "..";
 #endif
