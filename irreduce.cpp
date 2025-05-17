@@ -431,7 +431,7 @@ int main(int argc, char* argv[]) try {
     if (!parent.empty())
         std::filesystem::create_directories(parent);
 
-    zen::file out_ir(out_ir_file_path);
+    std::ofstream out_ir(out_ir_file_path);
     if (!out_ir)
         zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(out_ir_file_path), " for writing.");
     else { 
