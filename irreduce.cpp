@@ -303,20 +303,20 @@ int main(int argc, char* argv[]) try {
     #endif
     }
 
-    std::string output_file_path;
+    std::string out_ir_file_path;
 
     if (args.accept(NAME::ARG::output_file).is_present()) {
         auto out_opts = args.get_options(NAME::ARG::output_file);
         if (out_opts.empty())
             throw std::runtime_error(zen::quote(NAME::ARG::output_file) + " flag given with no path.");
-        output_file_path = out_opts[0];
+        out_ir_file_path = out_opts[0];
     } else { // no output IR file provided, fall back to default: ./output/<basename>.ir
         zen::fs::path input_path = input_file_path;
         zen::fs::path base = input_path.stem(); // remove extension
-        output_file_path = (zen::fs::path("output") / (base.string() + ".ir")).string();
+        out_ir_file_path = (zen::fs::path("output") / (base.string() + ".ir")).string();
     }
 
-    zen::log("Output IR file will be:", zen::quote(output_file_path));
+    zen::log("Output IR file will be:", zen::quote(out_ir_file_path));
 
     registerOpHandler(NAME::OP::constant, [](const IrNode* n) {
         return n->name + " = " + n->type + " constant(" + n->value + ")";
@@ -427,16 +427,16 @@ int main(int argc, char* argv[]) try {
     zen::log(final_ir);
 
     // Write the final IR to the output file.
-    auto parent = std::filesystem::path(output_file_path).parent_path();
+    auto parent = std::filesystem::path(out_ir_file_path).parent_path();
     if (!parent.empty())
         std::filesystem::create_directories(parent);
 
-    std::ofstream out_ir(output_file_path);
+    zen::ofstream out_ir(out_ir_file_path);
     if (!out_ir)
-        zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(output_file_path), " for writing.");
+        zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(out_ir_file_path), " for writing.");
     else{ 
         out_ir << final_ir << std::endl,
-        zen::log("Reduced IR also written to:", zen::color::green(zen::quote(output_file_path)));
+        zen::log("Reduced IR also written to:", zen::color::green(zen::quote(out_ir_file_path)));
     }
         
     // Cleanup: deallocate memory. This will be rewritten later
