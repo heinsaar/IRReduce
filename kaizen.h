@@ -857,6 +857,33 @@ public:
         return *it;
     }
 
+    // TODO: This function is a good candidate for the Kaizen library.
+    bool diff(const std::filesystem::path& other_path, std::ostream& out = std::cout)
+    {
+        file other(other_path);
+
+        auto it1 = begin();
+        auto it2 = other.begin();
+        std::size_t line_no = 1;
+        bool identical = true;
+
+        while (it1 != end() || it2 != other.end()) {
+            const std::string l1 = (it1 != end()) ? *it1 : "";
+            const std::string l2 = (it2 != other.end()) ? *it2 : "";
+
+            if (l1 != l2) {
+                identical = false;
+                out << "DIFF DETECTED ON LINE " << line_no << ":\n"
+                    << "- " << l1 << '\n'
+                    << "+ " << l2 << '\n';
+            }
+            if (it1 != end()) ++it1;
+            if (it2 != other.end()) ++it2;
+            ++line_no;
+        }
+        return identical;
+    }
+
 private:
     // TODO: Dynamically cache lines that are read the first time?
     const std::filesystem::path& filepath_;
