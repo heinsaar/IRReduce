@@ -1,0 +1,8 @@
+HloModule todo_replace_me_with_original_name
+
+ENTRY main {
+  c = s32[] constant(7)
+  d = s32[] add(a, b)
+  e = s32[] add(d, c)
+  ROOT root = (s32[] c, s32[] d, s32[] e) tuple(c, d, e)
+}

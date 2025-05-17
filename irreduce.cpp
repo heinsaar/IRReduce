@@ -431,13 +431,16 @@ int main(int argc, char* argv[]) try {
     if (!parent.empty())
         std::filesystem::create_directories(parent);
 
-    zen::ofstream out_ir(out_ir_file_path);
+    zen::file out_ir(out_ir_file_path);
     if (!out_ir)
         zen::log(zen::color::red("ERROR:"), "Cannot open ", zen::quote(out_ir_file_path), " for writing.");
     else{ 
         out_ir << final_ir << std::endl,
         zen::log("Reduced IR also written to:", zen::color::green(zen::quote(out_ir_file_path)));
     }
+
+    zen::file expected_ir(rootdir_from_exe() + "/ir/reduced/hlo_1_reduced.ir");
+    ZEN_EXPECT(expected_ir.diff(out_ir_file_path));
         
     // Cleanup: deallocate memory. This will be rewritten later
     // with proper resource management after this POC phase.
