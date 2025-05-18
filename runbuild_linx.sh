@@ -3,7 +3,7 @@ set -e
 
 # ── defaults ──────────────────────────────────────────────
 BUILD_TYPE="Debug"
-IR_FILE="../ir/hlo_1.ir"        # fallback
+IR_FILE="../ir/input/hlo_1.ir"        # fallback
 EXTRA_ARGS=()
 
 # ── parse all CLI args ────────────────────────────────────

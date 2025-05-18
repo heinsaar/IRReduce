@@ -3,7 +3,7 @@ setlocal EnableDelayedExpansion
 
 rem ── defaults ────────────────────────────────
 set "BUILD_TYPE=Debug"
-set "IR_FILE=..\ir\hlo_1.ir"
+set "IR_FILE=..\ir\input\hlo_1.ir"
 set "EXTRA_ARGS="
 
 rem ── parse arguments ─────────────────────────
