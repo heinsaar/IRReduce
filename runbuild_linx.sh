@@ -3,7 +3,7 @@ set -e
 
 # ── defaults ──────────────────────────────────────────────
 BUILD_TYPE="Debug"
-IR_FILE="../ir/input/hlo_1.ir"        # fallback
+IR_FILE="../ir/input/hlo_1.ir" # fallback / default
 EXTRA_ARGS=()
 
 # ── parse all CLI args ────────────────────────────────────
@@ -17,7 +17,7 @@ while [[ $# -gt 0 ]]; do
     --input_file)                  #  --input_file path
       IR_FILE="$2"
       shift 2 ;;
-    *)                               # everything else is passed through
+    *)                             # everything else is passed through
       EXTRA_ARGS+=("$1")
       shift ;;
   esac
