@@ -45,12 +45,12 @@ jobs:
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]]; then
         ./Release/IRReduce.exe \
-          --input_file ../ir/hlo_1.ir \
+          --input_file ../ir/input/hlo_1.ir \
           --output_ir_file ../output/hlo_1.ir \
           --pass_unusedconstants
         else
           ./IRReduce \
-            --input_file ../ir/hlo_1.ir \
+            --input_file ../ir/input/hlo_1.ir \
             --output_ir_file output/hlo_1.ir \
             --pass_unusedconstants
         fi

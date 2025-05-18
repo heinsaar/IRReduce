@@ -278,7 +278,7 @@ std::string rootdir_from_exe()
 }
 
 std::string get_default_input_file_path() {
-    return rootdir_from_exe() + "/ir/hlo_1.ir";
+    return rootdir_from_exe() + "/ir/input/hlo_1.ir";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

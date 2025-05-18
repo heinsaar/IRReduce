@@ -73,7 +73,7 @@ If you want to develop using MSVC compiler from Visual Studio Code, there are va
    ```
 7. **Observe the reduced IR.** For example, using the (XLA HLO-like) IR files in the `ir` directory:
    ```bash
-   ./irreduce ../ir/hlo_1.txt --pass_unusedconstants
+   ./irreduce ../ir/input/hlo_1.txt --pass_unusedconstants
    ```
    Will produce an output like the following:
    ```
