@@ -3,6 +3,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+#########################################################################################
+IRReduce-specific files
+
+output/
+
+#########################################################################################
+
 # User-specific files
 *.rsuser
 *.suo
