@@ -23,19 +23,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "Building with configuration: $BUILD_TYPE"
+echo "Running test with configuration: $BUILD_TYPE"
 echo "IR file: $IR_FILE"
 
-# ── configure & build ─────────────────────────────────────
-mkdir -p build
-cd build
-
-if [[ ! -f Makefile ]]; then
-  cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
+# ── assume build exists in ./build ────────────────────────
+EXECUTABLE="./build/IRReduce"
+if [[ ! -x "$EXECUTABLE" ]]; then
+  echo "ERROR: Executable not found: $EXECUTABLE"
+  echo "Make sure the project is built beforehand."
+  exit 1
 fi
-cmake --build . --config "$BUILD_TYPE"
-
-cd ..
 
 # ── run IRReduce ──────────────────────────────────────────
-./build/IRReduce --input_file "$IR_FILE" "${EXTRA_ARGS[@]}"
+"$EXECUTABLE" --input_file "$IR_FILE" "${EXTRA_ARGS[@]}"

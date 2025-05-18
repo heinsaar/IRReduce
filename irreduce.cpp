@@ -443,7 +443,7 @@ int main(int argc, char* argv[]) try {
         zen::log("Reduced IR also written to:", zen::color::green(zen::quote(out_ir_file_path)));
     }
 
-    zen::file  expected_ir(rootdir_from_exe() + "/ir/reduced/hlo_1_reduced.ir");
+    zen::file  expected_ir("./ir/reduced/hlo_1_reduced.ir");
     ZEN_EXPECT(expected_ir.diff(out_ir_file_path));
         
     // Cleanup: deallocate memory. This will be rewritten later

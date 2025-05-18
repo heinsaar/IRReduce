@@ -3,7 +3,7 @@ setlocal EnableDelayedExpansion
 
 rem ── defaults ────────────────────────────────
 set "BUILD_TYPE=Debug"
-set "IR_FILE=..\ir\input\hlo_1.ir"
+set "IR_FILE=.\ir\input\hlo_1.ir"
 set "EXTRA_ARGS="
 
 rem ── parse arguments ─────────────────────────
@@ -48,11 +48,13 @@ cmake --build . --config !BUILD_TYPE! || (
     endlocal & exit /b 1
 )
 
+cd ..
+
 rem ── choose runtime folder (Debug/Release vs root) ────
 if exist ".\!BUILD_TYPE!\IRReduce.exe" (
     set "RUN_EXE=.\!BUILD_TYPE!\IRReduce.exe"
 ) else (
-    set "RUN_EXE=.\IRReduce.exe"
+    set "RUN_EXE=.\build\IRReduce.exe"
 )
 
 rem ── run ─────────────────────────────────────
