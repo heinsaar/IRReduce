@@ -266,23 +266,20 @@ bool passRemoveUnusedConstants(IrModule* module) {
 
 std::string rootdir_from_exe()
 {
-// Identical for now since we'll launch with runbuild_win.bat or runbuild_unix.sh scripts.
-// The other option is Ctrl + F5 from Visual Studio, but that will launch the exe from something
-// like /out/build/x64-debug, for which the rootdir from the exe path is different.
-// We'll deal with this later.
-    auto cwd = zen::fs::current_path();
+    // Look for CMakeLists.txt as a reliable root marker
+    zen::fs::path current = zen::fs::current_path();
+    while (true) {
+        if (zen::fs::exists(current / "CMakeLists.txt"))
+            return current.string();
 
-    // Check if we're in the `build` directory (e.g. GitHub Actions)
-    if (zen::fs::exists(cwd / "../ir") && zen::fs::exists(cwd / "../output"))
-        return "..";  // CI or local runs with cwd=build
+        zen::fs::path parent = current.parent_path();
+        if (parent == current) break; // reached root
+        current = parent;
+    }
 
-    // Otherwise, assume we're already in the repo root
-    if (zen::fs::exists(cwd / "ir") && zen::fs::exists(cwd / "output"))
-        return ".";
-
-    // Fallback – still return ".." but warn user
-    std::cerr << "WARNING: Could not detect repo root correctly.\n";
-    return "..";
+    // Fallback if nothing found — but likely wrong
+    zen::log(zen::color::yellow("WARNING: Failed to detect project root. Falling back to"), zen::quote("."));
+    return ".";
 }
 
 std::string get_default_input_file_path() {
