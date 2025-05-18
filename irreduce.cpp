@@ -270,11 +270,19 @@ std::string rootdir_from_exe()
 // The other option is Ctrl + F5 from Visual Studio, but that will launch the exe from something
 // like /out/build/x64-debug, for which the rootdir from the exe path is different.
 // We'll deal with this later.
-#ifdef _WIN32
+    auto cwd = zen::fs::current_path();
+
+    // Check if we're in the `build` directory (e.g. GitHub Actions)
+    if (zen::fs::exists(cwd / "../ir") && zen::fs::exists(cwd / "../output"))
+        return "..";  // CI or local runs with cwd=build
+
+    // Otherwise, assume we're already in the repo root
+    if (zen::fs::exists(cwd / "ir") && zen::fs::exists(cwd / "output"))
+        return ".";
+
+    // Fallback – still return ".." but warn user
+    std::cerr << "WARNING: Could not detect repo root correctly.\n";
     return "..";
-#else
-    return "..";
-#endif
 }
 
 std::string get_default_input_file_path() {
